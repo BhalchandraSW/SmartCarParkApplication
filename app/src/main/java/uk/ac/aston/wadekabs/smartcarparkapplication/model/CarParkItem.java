@@ -1,7 +1,7 @@
 package uk.ac.aston.wadekabs.smartcarparkapplication.model;
 
 /**
- * Created by bhalchandrawadekar on 22/12/2016.
+ * Created by Bhalchandra Wadekar on 22/12/2016.
  */
 
 /**
@@ -9,11 +9,11 @@ package uk.ac.aston.wadekabs.smartcarparkapplication.model;
  */
 public class CarParkItem {
 
-    public final String id;
+    public final int id;
     public final String content;
     public final String details;
 
-    public CarParkItem(String id, String content, String details) {
+    public CarParkItem(int id, String content, String details) {
         this.id = id;
         this.content = content;
         this.details = details;

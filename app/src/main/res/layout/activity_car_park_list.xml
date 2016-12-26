@@ -13,6 +13,6 @@
     <fragment
         android:name="uk.ac.aston.wadekabs.smartcarparkapplication.CarParkFragment"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"></fragment>
-    
+        android:layout_height="match_parent" />
+
 </RelativeLayout>

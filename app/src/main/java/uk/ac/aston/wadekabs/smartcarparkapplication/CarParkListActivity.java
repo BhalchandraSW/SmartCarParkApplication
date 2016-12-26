@@ -11,7 +11,10 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 
 import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
+import uk.ac.aston.wadekabs.smartcarparkapplication.model.CarParkContent;
 import uk.ac.aston.wadekabs.smartcarparkapplication.model.CarParkItem;
 
 public class CarParkListActivity extends AppCompatActivity implements CarParkFragment.OnListFragmentInteractionListener {
@@ -36,13 +39,28 @@ public class CarParkListActivity extends AppCompatActivity implements CarParkFra
         JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null, new Response.Listener<JSONArray>() {
             @Override
             public void onResponse(JSONArray response) {
-                // Display the response array as string
-                Toast.makeText(getApplicationContext(), response.toString(), Toast.LENGTH_LONG).show();
+
+                for (int i = 0; i < response.length(); i++) {
+
+                    JSONObject object = response.optJSONObject(i);
+
+                    int free = 0, lotCode = 0;
+
+                    try {
+                        free = object.getInt("Free");
+                        lotCode = object.getInt("LotCode");
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                    CarParkItem carPark = new CarParkItem(lotCode, Integer.toString(free), "");
+                    CarParkContent.addItem(carPark);
+                }
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Toast.makeText(getApplicationContext(), error.toString(), Toast.LENGTH_LONG).show();
+                // Toast.makeText(getApplicationContext(), error.toString(), Toast.LENGTH_LONG).show();
             }
         });
 

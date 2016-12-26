@@ -59,7 +59,7 @@ public class JSONParser {
             }
         }
         reader.endObject();
-        return new CarParkItem(text, text, text);
+        return new CarParkItem(1, text, text);
     }
 
     public List<Double> readDoublesArray(JsonReader reader) throws IOException {

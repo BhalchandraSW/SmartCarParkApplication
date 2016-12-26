@@ -17,39 +17,15 @@ import java.util.Map;
 public class CarParkContent {
 
     /**
-     * An array of sample (car park) items.
-     */
-    public static final List<CarParkItem> ITEMS = new ArrayList<>();
-
-    /**
      * A map of sample (car park) items, by ID.
      */
-    public static final Map<String, CarParkItem> ITEM_MAP = new HashMap<>();
+    public static final Map<Integer, CarParkItem> ITEM_MAP = new HashMap<>();
 
-    private static final int COUNT = 25;
-
-    static {
-        // Add some sample items.
-        for (int i = 1; i <= COUNT; i++) {
-            addItem(createCarParkItem(i));
-        }
-    }
-
-    private static void addItem(CarParkItem item) {
-        ITEMS.add(item);
+    public static void addItem(CarParkItem item) {
         ITEM_MAP.put(item.id, item);
     }
 
-    private static CarParkItem createCarParkItem(int position) {
-        return new CarParkItem(String.valueOf(position), "Item " + position, makeDetails(position));
-    }
-
-    private static String makeDetails(int position) {
-        StringBuilder builder = new StringBuilder();
-        builder.append("Details about Item: ").append(position);
-        for (int i = 0; i < position; i++) {
-            builder.append("\nMore details information here.");
-        }
-        return builder.toString();
+    public static List<CarParkItem> items() {
+        return new ArrayList<>(ITEM_MAP.values());
     }
 }

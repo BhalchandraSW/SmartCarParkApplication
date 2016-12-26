@@ -67,11 +67,10 @@ public class CarParkFragment extends Fragment {
             } else {
                 recyclerView.setLayoutManager(new GridLayoutManager(context, mColumnCount));
             }
-            recyclerView.setAdapter(new CarParkRecyclerViewAdapter(CarParkContent.ITEMS, mListener));
+            recyclerView.setAdapter(new CarParkRecyclerViewAdapter(CarParkContent.items(), mListener));
         }
         return view;
     }
-
 
     @Override
     public void onAttach(Context context) {
@@ -101,7 +100,6 @@ public class CarParkFragment extends Fragment {
      * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnListFragmentInteractionListener {
-        // TODO: Update argument type and name
         void onListFragmentInteraction(CarParkItem item);
     }
 }
