@@ -10,7 +10,15 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
+import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
@@ -30,6 +38,18 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import uk.ac.aston.wadekabs.smartcarparkapplication.model.CarParkContent;
+import uk.ac.aston.wadekabs.smartcarparkapplication.model.CarParkItem;
+
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     public final static int REQUEST_CHECK_LOCATION_SETTINGS = 1;
@@ -40,6 +60,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private GoogleMap mMap;
     private Location mLastLocation;
     private Marker mMarker;
+    private List<CarPark> carParkList = new ArrayList<>();
+
+    private Map<Integer, CarPark> carParkMap = new LinkedHashMap<>();
+    private boolean locationIsAvailable = false, occupancyIsAvailable = false;
 
     private void setLastLocation(Location mLastLocation) {
         this.mLastLocation = mLastLocation;
@@ -107,6 +131,41 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         this.setMap(googleMap);
+
+        MySingleton.getInstance(this.getApplicationContext()).getRequestQueue();
+        String url = "https://api.parkright.io/smartlot/v1/OccupanciesByCoordinate/e0c50d6bc5fc4223a37f3d893e0b7d27/UKLCYWC01/51.5209/-0.1741/";
+
+        // Request a json response from the provided URL.
+        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null, new Response.Listener<JSONArray>() {
+            @Override
+            public void onResponse(JSONArray response) {
+
+                for (int i = 0; i < response.length(); i++) {
+
+                    JSONObject object = response.optJSONObject(i);
+
+                    int free = 0, lotCode = 0;
+
+                    try {
+                        free = object.getInt("Free");
+                        lotCode = object.getInt("LotCode");
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                    CarParkItem carPark = new CarParkItem(lotCode, Integer.toString(free), "");
+                    CarParkContent.addItem(carPark);
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                // Toast.makeText(getApplicationContext(), error.toString(), Toast.LENGTH_LONG).show();
+            }
+        });
+
+        // Add the request to the RequestQueue accessed through singleton class.
+        MySingleton.getInstance(this.getApplicationContext()).addToRequestQueue(jsonArrayRequest);
     }
 
     @Override
@@ -258,7 +317,234 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 mMarker.setPosition(latLng);
             }
 
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 18.0f));
+            String key = "AIzaSyDhqp3V7EwriI-CP_2osYH-8ZuC6GuyWGs";
+
+            // update list of car parks here
+            String url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=" + key + "&location=" + mLastLocation.getLatitude() + "," + mLastLocation.getLongitude() + "&radius=50000&type=parking";
+
+            // Instantiate the RequestQueue.
+            final RequestQueue queue = Volley.newRequestQueue(this);
+
+//            // Request a string response from the provided URL.
+//            StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+//                    new Response.Listener<String>() {
+//                        @Override
+//                        public void onResponse(String response) {
+//                            try {
+//                                JSONObject object = new JSONObject(response);
+//                                JSONArray results = object.getJSONArray("results");
+//
+//                                for (int i = 0; i < results.length(); i++) {
+//                                    JSONObject place = (JSONObject) results.get(i);
+//                                    JSONObject geometry = place.getJSONObject("geometry");
+//                                    JSONObject location = geometry.getJSONObject("location");
+//
+//                                    double lat = location.getDouble("lat");
+//                                    double lng = location.getDouble("lng");
+//
+//                                    LatLng placeLatLng = new LatLng(lat, lng);
+//
+//                                    // mMap.addCircle(new CircleOptions().center(placeLatLng).radius(500).fillColor(Color.BLUE).strokeWidth(0.5f));
+//
+//                                    CarPark carPark = new CarPark();
+//                                    carPark.setLatLng(placeLatLng);
+//                                    carParkList.add(carPark);
+//                                }
+//
+//                                locationIsAvailable = true;
+//                                addMarkers();
+//
+//                            } catch (JSONException e) {
+//                                e.printStackTrace();
+//                            }
+//                        }
+//                    }, new Response.ErrorListener() {
+//                @Override
+//                public void onErrorResponse(VolleyError error) {
+//                    Toast.makeText(getApplicationContext(), "That didn't work!", Toast.LENGTH_LONG).show();
+//                }
+//            });
+
+            String apiKey = "e0c50d6bc5fc4223a37f3d893e0b7d27";
+            String siteCode = "UKLCYWC01";
+
+            String lotURL = "https://api.parkright.io/smartlot/v1/LotsByCoordinate/" + apiKey + "/" + siteCode + "/" + mLastLocation.getLatitude() + "/" + mLastLocation.getLongitude() + "/";
+            final String occupanciesURL = "https://api.parkright.io/smartlot/v1/OccupanciesByLots/" + apiKey + "/" + siteCode + "/";
+
+            // Request a string response from the provided URL.
+            StringRequest lotRequest = new StringRequest(Request.Method.GET, lotURL,
+                    new Response.Listener<String>() {
+                        @Override
+                        public void onResponse(String response) {
+                            try {
+
+                                JSONArray lots = new JSONArray(response);
+
+
+                                for (int i = 0; i < lots.length(); i++) {
+
+                                    JSONObject carParkObject = (JSONObject) lots.get(i);
+
+                                    int lotCode = carParkObject.getInt("LotCode");
+                                    LatLng latLng = new LatLng(carParkObject.getDouble("Latitude"), carParkObject.getDouble("Longitude"));
+
+                                    carParkMap.put(lotCode, new CarPark(lotCode, latLng));
+                                }
+
+                                locationIsAvailable = true;
+                                addMarkers();
+
+                                queue.add(new JsonArrayRequest(Request.Method.POST, occupanciesURL, new JSONArray(carParkMap.keySet()), new Response.Listener<JSONArray>() {
+                                    @Override
+                                    public void onResponse(JSONArray occupancies) {
+
+                                        System.out.println("Occupancies: " + occupancies);
+
+                                        for (int i = 0; i < occupancies.length(); i++) {
+                                            try {
+
+                                                JSONObject occupancy = occupancies.getJSONObject(i);
+
+                                                int lotCode = occupancy.getInt("LotCode");
+                                                CarPark carPark = carParkMap.get(lotCode);
+
+                                                int free = occupancy.getInt("Free");
+                                                carPark.setFree(free);
+
+                                            } catch (JSONException e) {
+                                                e.printStackTrace();
+                                            }
+                                        }
+
+                                        occupancyIsAvailable = true;
+                                        addMarkers();
+                                    }
+                                }, new Response.ErrorListener() {
+                                    @Override
+                                    public void onErrorResponse(VolleyError error) {
+                                        error.printStackTrace();
+                                    }
+                                }));
+
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    Toast.makeText(getApplicationContext(), "That didn't work!", Toast.LENGTH_LONG).show();
+                }
+            });
+
+
+//            // Request a string response from the provided URL.
+//            StringRequest priceAndOccupancyRequest = new StringRequest(Request.Method.POST, occupanciesURL,
+//                    new Response.Listener<String>() {
+//                        @Override
+//                        public void onResponse(String response) {
+//                            try {
+//                                // JSONObject object = new JSONObject(response);
+//                                JSONArray array = new JSONArray(response);
+//
+//                                System.out.println(array);
+//
+////                                JSONArray results = object.getJSONArray("results");
+////
+////                                for (int i = 0; i < results.length(); i++) {
+////                                    JSONObject place = (JSONObject) results.get(i);
+////                                    JSONObject geometry = place.getJSONObject("geometry");
+////                                    JSONObject location = geometry.getJSONObject("location");
+////
+////                                    double lat = location.getDouble("lat");
+////                                    double lng = location.getDouble("lng");
+////
+////                                    LatLng placeLatLng = new LatLng(lat, lng);
+////
+////                                    // mMap.addCircle(new CircleOptions().center(placeLatLng).radius(500).fillColor(Color.BLUE).strokeWidth(0.5f));
+////
+////                                    CarPark carPark = new CarPark();
+////                                    carPark.setLatLng(placeLatLng);
+////                                    carParkList.add(carPark);
+////                                }
+//
+//                                occupancyIsAvailable = true;
+//                                addMarkers();
+//
+//                            } catch (JSONException e) {
+//                                e.printStackTrace();
+//                            }
+//                        }
+//                    }, new Response.ErrorListener() {
+//                @Override
+//                public void onErrorResponse(VolleyError error) {
+//                    Toast.makeText(getApplicationContext(), "That didn't work!", Toast.LENGTH_LONG).show();
+//                }
+//            });
+
+            // Add the request to the RequestQueue.
+            // queue.add(stringRequest);
+            queue.add(lotRequest);
+
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15.0f));
+        }
+    }
+
+    private void addMarkers() {
+
+        if (locationIsAvailable && occupancyIsAvailable) {
+
+            locationIsAvailable = occupancyIsAvailable = false;
+
+            for (CarPark carPark : carParkMap.values()) {
+                if (carPark.getFree() > 0)
+                    mMap.addMarker(new MarkerOptions().position(carPark.getLatLng()).title(Integer.toString(carPark.getFree())));
+            }
+        }
+    }
+
+    class CarPark {
+
+        private int lotCode;
+        private LatLng latLng;
+        private double price;
+        private int free;
+
+        public CarPark(int lotCode, LatLng latLng) {
+            this.setLotCode(lotCode);
+            this.setLatLng(latLng);
+        }
+
+        public int getLotCode() {
+            return this.lotCode;
+        }
+
+        public void setLotCode(int lotCode) {
+            this.lotCode = lotCode;
+        }
+
+        public LatLng getLatLng() {
+            return latLng;
+        }
+
+        public void setLatLng(LatLng latLng) {
+            this.latLng = latLng;
+        }
+
+        public double getPrice() {
+            return price;
+        }
+
+        public void setPrice(double price) {
+            this.price = price;
+        }
+
+        public int getFree() {
+            return free;
+        }
+
+        public void setFree(int free) {
+            this.free = free;
         }
     }
 }
