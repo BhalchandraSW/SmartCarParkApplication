@@ -18,7 +18,6 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
@@ -37,18 +36,15 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.maps.android.clustering.ClusterItem;
+import com.google.maps.android.clustering.ClusterManager;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-
-import uk.ac.aston.wadekabs.smartcarparkapplication.model.CarParkContent;
-import uk.ac.aston.wadekabs.smartcarparkapplication.model.CarParkItem;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
@@ -60,10 +56,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private GoogleMap mMap;
     private Location mLastLocation;
     private Marker mMarker;
-    private List<CarPark> carParkList = new ArrayList<>();
 
     private Map<Integer, CarPark> carParkMap = new LinkedHashMap<>();
     private boolean locationIsAvailable = false, occupancyIsAvailable = false;
+    private ClusterManager<CarPark> mClusterManager;
 
     private void setLastLocation(Location mLastLocation) {
         this.mLastLocation = mLastLocation;
@@ -132,40 +128,30 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         this.setMap(googleMap);
 
-        MySingleton.getInstance(this.getApplicationContext()).getRequestQueue();
-        String url = "https://api.parkright.io/smartlot/v1/OccupanciesByCoordinate/e0c50d6bc5fc4223a37f3d893e0b7d27/UKLCYWC01/51.5209/-0.1741/";
+        // Initialize the manager with the context and the map.
+        // (Activity extends context, so we can pass 'this' in the constructor.)
+        mClusterManager = new ClusterManager<>(this, googleMap);
 
-        // Request a json response from the provided URL.
-        JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, url, null, new Response.Listener<JSONArray>() {
+        // Point the map's listeners at the listeners implemented by the cluster manager.
+        googleMap.setOnCameraIdleListener(mClusterManager);
+        googleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
-            public void onResponse(JSONArray response) {
+            public boolean onMarkerClick(Marker marker) {
 
-                for (int i = 0; i < response.length(); i++) {
+                if (marker.getTitle() == null) {
+                    for (CarPark carPark : carParkMap.values()) {
+                        LatLng latLng = marker.getPosition();
 
-                    JSONObject object = response.optJSONObject(i);
-
-                    int free = 0, lotCode = 0;
-
-                    try {
-                        free = object.getInt("Free");
-                        lotCode = object.getInt("LotCode");
-                    } catch (JSONException e) {
-                        e.printStackTrace();
+                        if (carPark.getPosition().equals(latLng)) {
+                            marker.setTitle("Available Bay(s):\t" + Integer.toString(carPark.getFree()));
+                        }
                     }
-
-                    CarParkItem carPark = new CarParkItem(lotCode, Integer.toString(free), "");
-                    CarParkContent.addItem(carPark);
                 }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                // Toast.makeText(getApplicationContext(), error.toString(), Toast.LENGTH_LONG).show();
+
+                marker.showInfoWindow();
+                return false;
             }
         });
-
-        // Add the request to the RequestQueue accessed through singleton class.
-        MySingleton.getInstance(this.getApplicationContext()).addToRequestQueue(jsonArrayRequest);
     }
 
     @Override
@@ -317,53 +303,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 mMarker.setPosition(latLng);
             }
 
-            String key = "AIzaSyDhqp3V7EwriI-CP_2osYH-8ZuC6GuyWGs";
-
-            // update list of car parks here
-            String url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?key=" + key + "&location=" + mLastLocation.getLatitude() + "," + mLastLocation.getLongitude() + "&radius=50000&type=parking";
-
             // Instantiate the RequestQueue.
-            final RequestQueue queue = Volley.newRequestQueue(this);
-
-//            // Request a string response from the provided URL.
-//            StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-//                    new Response.Listener<String>() {
-//                        @Override
-//                        public void onResponse(String response) {
-//                            try {
-//                                JSONObject object = new JSONObject(response);
-//                                JSONArray results = object.getJSONArray("results");
-//
-//                                for (int i = 0; i < results.length(); i++) {
-//                                    JSONObject place = (JSONObject) results.get(i);
-//                                    JSONObject geometry = place.getJSONObject("geometry");
-//                                    JSONObject location = geometry.getJSONObject("location");
-//
-//                                    double lat = location.getDouble("lat");
-//                                    double lng = location.getDouble("lng");
-//
-//                                    LatLng placeLatLng = new LatLng(lat, lng);
-//
-//                                    // mMap.addCircle(new CircleOptions().center(placeLatLng).radius(500).fillColor(Color.BLUE).strokeWidth(0.5f));
-//
-//                                    CarPark carPark = new CarPark();
-//                                    carPark.setLatLng(placeLatLng);
-//                                    carParkList.add(carPark);
-//                                }
-//
-//                                locationIsAvailable = true;
-//                                addMarkers();
-//
-//                            } catch (JSONException e) {
-//                                e.printStackTrace();
-//                            }
-//                        }
-//                    }, new Response.ErrorListener() {
-//                @Override
-//                public void onErrorResponse(VolleyError error) {
-//                    Toast.makeText(getApplicationContext(), "That didn't work!", Toast.LENGTH_LONG).show();
-//                }
-//            });
+            final RequestQueue queue = MySingleton.getInstance(this.getApplicationContext()).getRequestQueue();
 
             String apiKey = "e0c50d6bc5fc4223a37f3d893e0b7d27";
             String siteCode = "UKLCYWC01";
@@ -437,53 +378,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }
             });
 
-
-//            // Request a string response from the provided URL.
-//            StringRequest priceAndOccupancyRequest = new StringRequest(Request.Method.POST, occupanciesURL,
-//                    new Response.Listener<String>() {
-//                        @Override
-//                        public void onResponse(String response) {
-//                            try {
-//                                // JSONObject object = new JSONObject(response);
-//                                JSONArray array = new JSONArray(response);
-//
-//                                System.out.println(array);
-//
-////                                JSONArray results = object.getJSONArray("results");
-////
-////                                for (int i = 0; i < results.length(); i++) {
-////                                    JSONObject place = (JSONObject) results.get(i);
-////                                    JSONObject geometry = place.getJSONObject("geometry");
-////                                    JSONObject location = geometry.getJSONObject("location");
-////
-////                                    double lat = location.getDouble("lat");
-////                                    double lng = location.getDouble("lng");
-////
-////                                    LatLng placeLatLng = new LatLng(lat, lng);
-////
-////                                    // mMap.addCircle(new CircleOptions().center(placeLatLng).radius(500).fillColor(Color.BLUE).strokeWidth(0.5f));
-////
-////                                    CarPark carPark = new CarPark();
-////                                    carPark.setLatLng(placeLatLng);
-////                                    carParkList.add(carPark);
-////                                }
-//
-//                                occupancyIsAvailable = true;
-//                                addMarkers();
-//
-//                            } catch (JSONException e) {
-//                                e.printStackTrace();
-//                            }
-//                        }
-//                    }, new Response.ErrorListener() {
-//                @Override
-//                public void onErrorResponse(VolleyError error) {
-//                    Toast.makeText(getApplicationContext(), "That didn't work!", Toast.LENGTH_LONG).show();
-//                }
-//            });
-
             // Add the request to the RequestQueue.
-            // queue.add(stringRequest);
             queue.add(lotRequest);
 
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15.0f));
@@ -497,13 +392,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             locationIsAvailable = occupancyIsAvailable = false;
 
             for (CarPark carPark : carParkMap.values()) {
-                if (carPark.getFree() > 0)
-                    mMap.addMarker(new MarkerOptions().position(carPark.getLatLng()).title(Integer.toString(carPark.getFree())));
+                if (carPark.getFree() > 0) {
+                    mClusterManager.addItem(carPark);
+                }
             }
         }
     }
 
-    class CarPark {
+    class CarPark implements ClusterItem {
 
         private int lotCode;
         private LatLng latLng;
@@ -545,6 +441,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         public void setFree(int free) {
             this.free = free;
+        }
+
+        @Override
+        public LatLng getPosition() {
+            return getLatLng();
         }
     }
 }
