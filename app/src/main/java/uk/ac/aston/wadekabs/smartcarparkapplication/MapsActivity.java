@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -33,11 +34,13 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.maps.android.clustering.ClusterItem;
 import com.google.maps.android.clustering.ClusterManager;
+import com.google.maps.android.ui.IconGenerator;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -143,7 +146,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         LatLng latLng = marker.getPosition();
 
                         if (carPark.getPosition().equals(latLng)) {
-                            marker.setTitle("Available Bay(s):\t" + Integer.toString(carPark.getFree()));
+
+                            IconGenerator iconGenerator = new IconGenerator(getApplicationContext());
+                            Bitmap bitmap = iconGenerator.makeIcon(Integer.toString(carPark.getFree()));
+
+                            marker.setIcon(BitmapDescriptorFactory.fromBitmap(bitmap));
                         }
                     }
                 }
