@@ -49,6 +49,8 @@ import org.json.JSONObject;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import uk.ac.aston.wadekabs.smartcarparkapplication.model.CarPark;
+
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     public final static int REQUEST_CHECK_LOCATION_SETTINGS = 1;
@@ -134,6 +136,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // Initialize the manager with the context and the map.
         // (Activity extends context, so we can pass 'this' in the constructor.)
         mClusterManager = new ClusterManager<>(this, googleMap);
+        mClusterManager.setRenderer(new CarParkRenderer(getApplicationContext(), googleMap, mClusterManager));
 
         // Point the map's listeners at the listeners implemented by the cluster manager.
         googleMap.setOnCameraIdleListener(mClusterManager);
@@ -346,8 +349,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                     @Override
                                     public void onResponse(JSONArray occupancies) {
 
-                                        System.out.println("Occupancies: " + occupancies);
-
                                         for (int i = 0; i < occupancies.length(); i++) {
                                             try {
 
@@ -403,56 +404,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     mClusterManager.addItem(carPark);
                 }
             }
-        }
-    }
-
-    class CarPark implements ClusterItem {
-
-        private int lotCode;
-        private LatLng latLng;
-        private double price;
-        private int free;
-
-        public CarPark(int lotCode, LatLng latLng) {
-            this.setLotCode(lotCode);
-            this.setLatLng(latLng);
-        }
-
-        public int getLotCode() {
-            return this.lotCode;
-        }
-
-        public void setLotCode(int lotCode) {
-            this.lotCode = lotCode;
-        }
-
-        public LatLng getLatLng() {
-            return latLng;
-        }
-
-        public void setLatLng(LatLng latLng) {
-            this.latLng = latLng;
-        }
-
-        public double getPrice() {
-            return price;
-        }
-
-        public void setPrice(double price) {
-            this.price = price;
-        }
-
-        public int getFree() {
-            return free;
-        }
-
-        public void setFree(int free) {
-            this.free = free;
-        }
-
-        @Override
-        public LatLng getPosition() {
-            return getLatLng();
         }
     }
 }
