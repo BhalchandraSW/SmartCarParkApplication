@@ -4,7 +4,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.maps.android.clustering.ClusterItem;
 
 /**
- * Created by bhalchandrawadekar on 06/02/2017.
+ * Created by Bhalchandra Wadekar on 06/02/2017.
  */
 
 public class CarPark implements ClusterItem {
