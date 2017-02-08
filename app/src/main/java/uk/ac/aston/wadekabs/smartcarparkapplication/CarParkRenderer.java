@@ -13,7 +13,7 @@ import com.google.maps.android.ui.IconGenerator;
 import uk.ac.aston.wadekabs.smartcarparkapplication.model.CarPark;
 
 /**
- * Created by bhalchandrawadekar on 06/02/2017.
+ * Created by Bhalchandra Wadekar on 06/02/2017.
  */
 
 public class CarParkRenderer extends DefaultClusterRenderer<CarPark> {
@@ -21,7 +21,7 @@ public class CarParkRenderer extends DefaultClusterRenderer<CarPark> {
     private final IconGenerator mIconGenerator;
     private ClusterManager<CarPark> mClusterManager;
 
-    public CarParkRenderer(Context context, GoogleMap map, ClusterManager clusterManager) {
+    public CarParkRenderer(Context context, GoogleMap map, ClusterManager<CarPark> clusterManager) {
         super(context, map, clusterManager);
         mIconGenerator = new IconGenerator(context);
     }
