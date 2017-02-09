@@ -55,4 +55,8 @@ public class CarPark implements ClusterItem {
     public LatLng getPosition() {
         return getLatLng();
     }
+
+    public String toString() {
+        return "Car Park: [Lot Code:\t" + lotCode + "\tPosition:\t(" + latLng.latitude + ", " + latLng.longitude + ")\tPrice:\t" + price + "]";
+    }
 }

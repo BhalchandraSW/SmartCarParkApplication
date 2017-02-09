@@ -16,12 +16,11 @@ import uk.ac.aston.wadekabs.smartcarparkapplication.model.CarPark;
  * Created by Bhalchandra Wadekar on 06/02/2017.
  */
 
-public class CarParkRenderer extends DefaultClusterRenderer<CarPark> {
+class CarParkRenderer extends DefaultClusterRenderer<CarPark> {
 
     private final IconGenerator mIconGenerator;
-    private ClusterManager<CarPark> mClusterManager;
 
-    public CarParkRenderer(Context context, GoogleMap map, ClusterManager<CarPark> clusterManager) {
+    CarParkRenderer(Context context, GoogleMap map, ClusterManager<CarPark> clusterManager) {
         super(context, map, clusterManager);
         mIconGenerator = new IconGenerator(context);
     }

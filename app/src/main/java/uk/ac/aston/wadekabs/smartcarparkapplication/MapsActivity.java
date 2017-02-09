@@ -5,16 +5,18 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
-import android.widget.Toast;
+import android.util.Log;
 
 import com.android.volley.Request;
-import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
@@ -30,6 +32,9 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
+import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -39,7 +44,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.maps.android.clustering.ClusterManager;
-import com.google.maps.android.ui.IconGenerator;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -59,14 +63,31 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private GoogleMap mMap;
     private Location mLastLocation;
+    private LatLng destination;
     private Marker mMarker;
 
     private Map<Integer, CarPark> carParkMap = new LinkedHashMap<>();
     private boolean locationIsAvailable = false, occupancyIsAvailable = false;
     private ClusterManager<CarPark> mClusterManager;
 
+    private Location getLastLocation() {
+        return mLastLocation;
+    }
+
     private void setLastLocation(Location mLastLocation) {
         this.mLastLocation = mLastLocation;
+        updateUI();
+    }
+
+    private LatLng getDestination() {
+        if (destination == null && getLastLocation() != null) {
+            this.setDestination(new LatLng(getLastLocation().getLatitude(), getLastLocation().getLongitude()));
+        }
+        return destination;
+    }
+
+    private void setDestination(LatLng destination) {
+        this.destination = destination;
         updateUI();
     }
 
@@ -85,6 +106,24 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        PlaceAutocompleteFragment autocompleteFragment = (PlaceAutocompleteFragment)
+                getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
+
+        autocompleteFragment.setHint(getResources().getString(R.string.destination_input_text));
+
+        autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+            @Override
+            public void onPlaceSelected(Place place) {
+                MapsActivity.this.setDestination(place.getLatLng());
+                mMarker.setTitle(place.getName().toString());
+            }
+
+            @Override
+            public void onError(Status status) {
+                System.out.println(status);
+            }
+        });
 
         if (mGoogleApiClient == null) {
             mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -139,28 +178,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         // Point the map's listeners at the listeners implemented by the cluster manager.
         googleMap.setOnCameraIdleListener(mClusterManager);
-        googleMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
-            @Override
-            public boolean onMarkerClick(Marker marker) {
-
-                if (marker.getTitle() == null) {
-                    for (CarPark carPark : carParkMap.values()) {
-                        LatLng latLng = marker.getPosition();
-
-                        if (carPark.getPosition().equals(latLng)) {
-
-                            IconGenerator iconGenerator = new IconGenerator(getApplicationContext());
-                            Bitmap bitmap = iconGenerator.makeIcon(Integer.toString(carPark.getFree()));
-
-                            marker.setIcon(BitmapDescriptorFactory.fromBitmap(bitmap));
-                        }
-                    }
-                }
-
-                marker.showInfoWindow();
-                return false;
-            }
-        });
     }
 
     @Override
@@ -302,23 +319,34 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      */
     private void updateUI() {
 
-        if (mMap != null && mLastLocation != null) {
-
-            LatLng latLng = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
+        if (mMap != null && mLastLocation != null && this.getDestination() != null) {
 
             if (mMarker == null) {
-                mMarker = mMap.addMarker(new MarkerOptions().position(latLng).title("You are here!"));
+                mMarker = mMap.addMarker(new MarkerOptions().position(destination));
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+
+                    Drawable drawable = getResources().getDrawable(R.drawable.ic_flag_black_24dp, null);
+
+                    Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+                    Canvas canvas = new Canvas(bitmap);
+                    drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+                    drawable.draw(canvas);
+
+                    mMarker.setIcon(BitmapDescriptorFactory.fromBitmap(bitmap));
+                }
+
             } else {
-                mMarker.setPosition(latLng);
+                mMarker.setPosition(destination);
             }
 
             // Instantiate the RequestQueue.
-            final RequestQueue queue = MySingleton.getInstance(this.getApplicationContext()).getRequestQueue();
+            final MySingleton queue = MySingleton.getInstance(this.getApplicationContext());
 
             String apiKey = "e0c50d6bc5fc4223a37f3d893e0b7d27";
             String siteCode = "UKLCYWC01";
 
-            String lotURL = "https://api.parkright.io/smartlot/v1/LotsByCoordinate/" + apiKey + "/" + siteCode + "/" + mLastLocation.getLatitude() + "/" + mLastLocation.getLongitude() + "/";
+            String lotURL = "https://api.parkright.io/smartlot/v1/LotsByCoordinate/" + apiKey + "/" + siteCode + "/" + this.getDestination().latitude + "/" + this.getDestination().longitude + "/";
             final String occupanciesURL = "https://api.parkright.io/smartlot/v1/OccupanciesByLots/" + apiKey + "/" + siteCode + "/";
 
             // Request a string response from the provided URL.
@@ -344,7 +372,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                 locationIsAvailable = true;
                                 addMarkers();
 
-                                queue.add(new JsonArrayRequest(Request.Method.POST, occupanciesURL, new JSONArray(carParkMap.keySet()), new Response.Listener<JSONArray>() {
+                                queue.addToRequestQueue(new JsonArrayRequest(Request.Method.POST, occupanciesURL, new JSONArray(carParkMap.keySet()), new Response.Listener<JSONArray>() {
                                     @Override
                                     public void onResponse(JSONArray occupancies) {
 
@@ -370,7 +398,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                 }, new Response.ErrorListener() {
                                     @Override
                                     public void onErrorResponse(VolleyError error) {
-                                        error.printStackTrace();
+                                        Log.i("Occupancy request", "Volley error: " + error);
                                     }
                                 }));
 
@@ -381,14 +409,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     }, new Response.ErrorListener() {
                 @Override
                 public void onErrorResponse(VolleyError error) {
-                    Toast.makeText(getApplicationContext(), "That didn't work!", Toast.LENGTH_LONG).show();
+                    Log.i("Lot request", "Volley error: " + error);
                 }
             });
 
             // Add the request to the RequestQueue.
-            queue.add(lotRequest);
+            queue.addToRequestQueue(lotRequest);
 
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15.0f));
+            mMarker.showInfoWindow();
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(destination, 15.0f));
         }
     }
 
