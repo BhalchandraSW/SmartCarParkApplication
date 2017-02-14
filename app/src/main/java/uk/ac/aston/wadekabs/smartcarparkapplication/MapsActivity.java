@@ -416,6 +416,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             // Add the request to the RequestQueue.
             queue.addToRequestQueue(lotRequest);
 
+            System.out.println("Lot request added.");
+
             mMarker.showInfoWindow();
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(destination, 15.0f));
         }

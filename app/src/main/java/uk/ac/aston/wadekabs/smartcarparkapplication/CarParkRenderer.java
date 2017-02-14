@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.google.maps.android.ui.IconGenerator;
@@ -23,6 +24,18 @@ class CarParkRenderer extends DefaultClusterRenderer<CarPark> {
     CarParkRenderer(Context context, GoogleMap map, ClusterManager<CarPark> clusterManager) {
         super(context, map, clusterManager);
         mIconGenerator = new IconGenerator(context);
+    }
+
+    @Override
+    protected int getBucket(Cluster<CarPark> cluster) {
+
+        int bucket = 0;
+
+        for (CarPark carPark : cluster.getItems()) {
+            bucket += carPark.getFree();
+        }
+
+        return bucket / cluster.getSize();
     }
 
     @Override
