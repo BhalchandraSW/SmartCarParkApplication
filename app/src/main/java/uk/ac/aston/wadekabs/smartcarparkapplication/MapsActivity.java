@@ -108,10 +108,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setMyLocationEnabled(true);
 
         UiSettings settings = mMap.getUiSettings();
-        settings.setZoomControlsEnabled(true);
-        settings.setIndoorLevelPickerEnabled(false);
         settings.setMyLocationButtonEnabled(true);
-        settings.setMapToolbarEnabled(false);
+        settings.setIndoorLevelPickerEnabled(false);
 
         updateUI();
     }
@@ -129,7 +127,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         PlaceAutocompleteFragment autocompleteFragment = (PlaceAutocompleteFragment)
                 getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
-
         autocompleteFragment.setHint(getResources().getString(R.string.destination_input_text));
 
         autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
@@ -343,7 +340,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if (mMap != null && mLastLocation != null && this.getDestination() != null) {
 
             if (mMarker == null) {
-                mMarker = mMap.addMarker(new MarkerOptions().position(destination));
+                mMarker = mMap.addMarker(new MarkerOptions().position(destination).draggable(true));
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 
