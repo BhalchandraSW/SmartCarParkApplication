@@ -24,8 +24,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/place_autocomplete_cardview"
-        tools:context="uk.ac.aston.wadekabs.smartcarparkapplication.MapsActivity">
-        
-    </fragment>
+        tools:context="uk.ac.aston.wadekabs.smartcarparkapplication.MapsActivity" />
+
 
 </RelativeLayout>
