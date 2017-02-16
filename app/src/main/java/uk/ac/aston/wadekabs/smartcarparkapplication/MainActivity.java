@@ -22,6 +22,8 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.TextView;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
@@ -75,7 +77,7 @@ public class MainActivity extends AppCompatActivity
     private GoogleMap mMap;
     private Location mLastLocation;
     private LatLng destination;
-    private Marker mMarker;
+    private Marker mDestinationMarker;
 
     private boolean locationIsAvailable = false, occupancyIsAvailable = false;
 
@@ -104,7 +106,7 @@ public class MainActivity extends AppCompatActivity
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-        
+
         if (mGoogleApiClient == null) {
             mGoogleApiClient = new GoogleApiClient.Builder(this)
                     .addConnectionCallbacks(this)
@@ -155,18 +157,6 @@ public class MainActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
-
-        // Associate searchable configuration with the SearchView
-//        SearchManager searchManager =
-//                (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-//        SearchView searchView =
-//                (SearchView) menu.findItem(R.id.app_bar_search).getActionView();
-//
-//        System.out.println("Search View:\t" + searchView);
-
-//        searchView.setSearchableInfo(
-//                searchManager.getSearchableInfo(getComponentName()));
-
         return true;
     }
 
@@ -180,7 +170,7 @@ public class MainActivity extends AppCompatActivity
         //noinspection SimplifiableIfStatement
 
         switch (id) {
-            case R.id.action_settings:
+            case R.id.app_bar_filter:
                 return true;
             case R.id.app_bar_search:
 
@@ -206,18 +196,8 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camera) {
+        if (id == R.id.nav_home) {
             // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
-
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -257,9 +237,9 @@ public class MainActivity extends AppCompatActivity
 
         if (mMap != null && mLastLocation != null && this.getDestination() != null) {
 
-            if (mMarker == null) {
+            if (mDestinationMarker == null) {
 
-                mMarker = mMap.addMarker(new MarkerOptions().position(destination).draggable(true));
+                mDestinationMarker = mMap.addMarker(new MarkerOptions().position(destination).draggable(true));
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 
@@ -270,11 +250,11 @@ public class MainActivity extends AppCompatActivity
                     drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
                     drawable.draw(canvas);
 
-                    mMarker.setIcon(BitmapDescriptorFactory.fromBitmap(bitmap));
+                    mDestinationMarker.setIcon(BitmapDescriptorFactory.fromBitmap(bitmap));
                 }
 
             } else {
-                mMarker.setPosition(destination);
+                mDestinationMarker.setPosition(destination);
             }
 
             // Instantiate the RequestQueue.
@@ -295,6 +275,7 @@ public class MainActivity extends AppCompatActivity
 
                                 JSONArray lots = new JSONArray(response);
 
+                                System.out.println("lots:\t" + lots.length());
 
                                 for (int i = 0; i < lots.length(); i++) {
 
@@ -353,9 +334,44 @@ public class MainActivity extends AppCompatActivity
             // Add the request to the RequestQueue.
             queue.addToRequestQueue(lotRequest);
 
+
+            // String tarrifUrl = "https://api.parkright.io/smartlot/v1/Tariffs/e0c50d6bc5fc4223a37f3d893e0b7d27/UKLCYWC01/";
+
+//            queue.addToRequestQueue(new JsonArrayRequest(Request.Method.GET, tarrifUrl, null, new Response.Listener<JSONArray>() {
+//                @Override
+//                public void onResponse(JSONArray tarrifs) {
+//
+//                    System.out.println("tarrifs:\t" + tarrifs.length());
+//
+////                    for (int i = 0; i < occupancies.length(); i++) {
+////                        try {
+////
+////                            JSONObject occupancy = occupancies.getJSONObject(i);
+////
+////                            int lotCode = occupancy.getInt("LotCode");
+////                            CarPark carPark = carParkMap.get(lotCode);
+////
+////                            int free = occupancy.getInt("Free");
+////                            carPark.setFree(free);
+////
+////                        } catch (JSONException e) {
+////                            e.printStackTrace();
+////                        }
+////                    }
+////
+////                    occupancyIsAvailable = true;
+////                    addMarkers();
+//                }
+//            }, new Response.ErrorListener() {
+//                @Override
+//                public void onErrorResponse(VolleyError error) {
+//                    Log.i("Tarrif request", "Volley error: " + error);
+//                }
+//            }));
+
             System.out.println("Lot request added.");
 
-            mMarker.showInfoWindow();
+            mDestinationMarker.showInfoWindow();
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(destination, 15.0f));
         }
     }
@@ -370,15 +386,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onMapReady(GoogleMap googleMap) {
         this.setMap(googleMap);
-
-        // Initialize the manager with the context and the map.
-        // (Activity extends context, so we can pass 'this' in the constructor.)
-        mClusterManager = new ClusterManager<>(this, googleMap);
-        mClusterManager.setRenderer(new CarParkRenderer(getApplicationContext(), googleMap, mClusterManager));
-
-        // Point the map's listeners at the listeners implemented by the cluster manager.
-        googleMap.setOnCameraIdleListener(mClusterManager);
-
     }
 
     @Override
@@ -414,6 +421,17 @@ public class MainActivity extends AppCompatActivity
     private void setMap(GoogleMap mMap) {
 
         this.mMap = mMap;
+
+        // Initialize the manager with the context and the map.
+        // (Activity extends context, so we can pass 'this' in the constructor.)
+        mClusterManager = new ClusterManager<>(this, this.mMap);
+        mClusterManager.setRenderer(new CarParkRenderer(getApplicationContext(), this.mMap, mClusterManager));
+
+        // Point the map's listeners at the listeners implemented by the cluster manager.
+        this.mMap.setOnCameraIdleListener(mClusterManager);
+
+        this.mMap.setInfoWindowAdapter(new MyInfoWindowAdapter());
+
 
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
@@ -537,7 +555,7 @@ public class MainActivity extends AppCompatActivity
                 Place place = PlaceAutocomplete.getPlace(this, data);
                 Log.i("Place onActivityResult", "Place: " + place.getName());
                 MainActivity.this.setDestination(place.getLatLng());
-                mMarker.setTitle(place.getName().toString());
+                mDestinationMarker.setTitle(place.getName().toString());
             } else if (resultCode == PlaceAutocomplete.RESULT_ERROR) {
                 Status status = PlaceAutocomplete.getStatus(this, data);
                 // TODO: Handle the error.
@@ -545,6 +563,43 @@ public class MainActivity extends AppCompatActivity
             } else if (resultCode == RESULT_CANCELED) {
                 // The user canceled the operation.
             }
+        }
+    }
+
+    class MyInfoWindowAdapter implements GoogleMap.InfoWindowAdapter {
+
+        private final View mWindow;
+        private final View mContents;
+
+        MyInfoWindowAdapter() {
+            mWindow = getLayoutInflater().inflate(R.layout.custom_info_window, null);
+            mContents = getLayoutInflater().inflate(R.layout.custom_info_contents, null);
+        }
+
+        @Override
+        public View getInfoWindow(Marker marker) {
+
+            CarPark carPark = null;
+
+            for (CarPark park : carParkMap.values()) {
+
+                if (park.getPosition().equals(new LatLng(marker.getPosition().latitude, marker.getPosition().longitude))) {
+                    carPark = park;
+                    break;
+                }
+            }
+
+            if (carPark != null) {
+                TextView city = (TextView) mWindow.findViewById(R.id.city_text_view);
+                city.setText(Integer.toString(carPark.getFree()));
+            }
+
+            return mWindow;
+        }
+
+        @Override
+        public View getInfoContents(Marker marker) {
+            return mContents;
         }
     }
 }

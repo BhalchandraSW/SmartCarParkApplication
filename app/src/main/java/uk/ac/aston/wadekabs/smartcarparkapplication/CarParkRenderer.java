@@ -42,7 +42,34 @@ class CarParkRenderer extends DefaultClusterRenderer<CarPark> {
     protected void onBeforeClusterItemRendered(CarPark item, MarkerOptions markerOptions) {
         super.onBeforeClusterItemRendered(item, markerOptions);
 
-        Bitmap icon = mIconGenerator.makeIcon(Integer.toString(item.getFree()));
+        int free = item.getFree();
+
+        mIconGenerator.setStyle(getStyle(free));
+        Bitmap icon = mIconGenerator.makeIcon(Integer.toString(free));
         markerOptions.icon(BitmapDescriptorFactory.fromBitmap(icon));
+    }
+
+    @Override
+    protected int getColor(int clusterSize) {
+        super.getColor(clusterSize);
+
+        if (clusterSize <= 3)
+            return -30720; // ORANGE
+
+        if (3 < clusterSize && clusterSize < 6)
+            return -16737844; // BLUE
+
+        return -10053376; // GREEN
+    }
+
+    private int getStyle(int free) {
+
+        if (free <= 3)
+            return IconGenerator.STYLE_ORANGE;
+
+        if (3 < free && free < 6)
+            return IconGenerator.STYLE_BLUE;
+
+        return IconGenerator.STYLE_GREEN;
     }
 }

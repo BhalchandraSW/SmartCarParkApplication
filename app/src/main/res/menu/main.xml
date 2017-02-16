@@ -9,9 +9,9 @@
         app:showAsAction="ifRoom" />
 
     <item
-        android:id="@+id/action_settings"
-        android:orderInCategory="100"
-        android:title="@string/action_settings"
-        app:showAsAction="never" />
+        android:id="@+id/app_bar_filter"
+        android:icon="@drawable/ic_filter_list_white"
+        android:title="@string/filter"
+        app:showAsAction="ifRoom" />
 
 </menu>
