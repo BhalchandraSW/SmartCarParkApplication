@@ -13,23 +13,25 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.GravityCompat;
+import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonArrayRequest;
-import com.android.volley.toolbox.StringRequest;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
@@ -54,11 +56,12 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.maps.android.clustering.ClusterManager;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -66,7 +69,7 @@ import java.util.Map;
 import uk.ac.aston.wadekabs.smartcarparkapplication.model.CarPark;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+        implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, ViewPager.OnPageChangeListener {
 
     public final static int REQUEST_CHECK_LOCATION_SETTINGS = 1;
     public final static int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 2;
@@ -79,10 +82,24 @@ public class MainActivity extends AppCompatActivity
     private LatLng destination;
     private Marker mDestinationMarker;
 
-    private boolean locationIsAvailable = false, occupancyIsAvailable = false;
-
     private Map<Integer, CarPark> carParkMap = new LinkedHashMap<>();
+
     private ClusterManager<CarPark> mClusterManager;
+
+    /**
+     * The {@link android.support.v4.view.PagerAdapter} that will provide
+     * fragments for each of the sections. We use a
+     * {@link FragmentPagerAdapter} derivative, which will keep every
+     * loaded fragment in memory. If this becomes too memory intensive, it
+     * may be best to switch to a
+     * {@link android.support.v4.app.FragmentStatePagerAdapter}.
+     */
+    private MainActivity.SectionsPagerAdapter mSectionsPagerAdapter;
+
+    /**
+     * The {@link ViewPager} that will host the section contents.
+     */
+    private ViewPager mViewPager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,6 +123,15 @@ public class MainActivity extends AppCompatActivity
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        // Create the adapter that will return a fragment for each of the three
+        // primary sections of the activity.
+        mSectionsPagerAdapter = new MainActivity.SectionsPagerAdapter(getSupportFragmentManager());
+
+        // Set up the ViewPager with the sections adapter.
+        mViewPager = (ViewPager) findViewById(R.id.container);
+        mViewPager.setAdapter(mSectionsPagerAdapter);
+        mViewPager.addOnPageChangeListener(this);
 
         if (mGoogleApiClient == null) {
             mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -142,7 +168,6 @@ public class MainActivity extends AppCompatActivity
         mGoogleApiClient.disconnect();
     }
 
-
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -167,11 +192,14 @@ public class MainActivity extends AppCompatActivity
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-
         switch (id) {
+
             case R.id.app_bar_filter:
+
+                Snackbar.make(findViewById(id), "Hello", Snackbar.LENGTH_LONG).show();
+
                 return true;
+
             case R.id.app_bar_search:
 
                 try {
@@ -190,14 +218,20 @@ public class MainActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
     @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_home) {
-            // Handle the camera action
+        switch (id) {
+            case R.id.nav_home:
+                break;
+            case R.id.nav_settings:
+
+                Intent intent = new Intent(getApplicationContext(), SettingsActivity.class);
+                startActivity(intent);
+
+                break;
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -226,14 +260,7 @@ public class MainActivity extends AppCompatActivity
         updateUI();
     }
 
-    /**
-     * Add/Update marker at last known location.
-     */
     private void updateUI() {
-
-        Log.i("updateUI", "mMap:\t" + mMap);
-        Log.i("updateUI", "mLastLocation:\t" + mLastLocation);
-        Log.i("updateUI", "destination: " + destination);
 
         if (mMap != null && mLastLocation != null && this.getDestination() != null) {
 
@@ -257,122 +284,39 @@ public class MainActivity extends AppCompatActivity
                 mDestinationMarker.setPosition(destination);
             }
 
-            // Instantiate the RequestQueue.
-            final MySingleton queue = MySingleton.getInstance(this.getApplicationContext());
-
-            String apiKey = "e0c50d6bc5fc4223a37f3d893e0b7d27";
-            String siteCode = "UKLCYWC01";
-
-            String lotURL = "https://api.parkright.io/smartlot/v1/LotsByCoordinate/" + apiKey + "/" + siteCode + "/" + this.getDestination().latitude + "/" + this.getDestination().longitude + "/";
-            final String occupanciesURL = "https://api.parkright.io/smartlot/v1/OccupanciesByLots/" + apiKey + "/" + siteCode + "/";
-
-            // Request a string response from the provided URL.
-            StringRequest lotRequest = new StringRequest(Request.Method.GET, lotURL,
-                    new Response.Listener<String>() {
-                        @Override
-                        public void onResponse(String response) {
-                            try {
-
-                                JSONArray lots = new JSONArray(response);
-
-                                System.out.println("lots:\t" + lots.length());
-
-                                for (int i = 0; i < lots.length(); i++) {
-
-                                    JSONObject carParkObject = (JSONObject) lots.get(i);
-
-                                    int lotCode = carParkObject.getInt("LotCode");
-                                    LatLng latLng = new LatLng(carParkObject.getDouble("Latitude"), carParkObject.getDouble("Longitude"));
-
-                                    carParkMap.put(lotCode, new CarPark(lotCode, latLng));
-                                }
-
-                                locationIsAvailable = true;
-                                addMarkers();
-
-                                queue.addToRequestQueue(new JsonArrayRequest(Request.Method.POST, occupanciesURL, new JSONArray(carParkMap.keySet()), new Response.Listener<JSONArray>() {
-                                    @Override
-                                    public void onResponse(JSONArray occupancies) {
-
-                                        for (int i = 0; i < occupancies.length(); i++) {
-                                            try {
-
-                                                JSONObject occupancy = occupancies.getJSONObject(i);
-
-                                                int lotCode = occupancy.getInt("LotCode");
-                                                CarPark carPark = carParkMap.get(lotCode);
-
-                                                int free = occupancy.getInt("Free");
-                                                carPark.setFree(free);
-
-                                            } catch (JSONException e) {
-                                                e.printStackTrace();
-                                            }
-                                        }
-
-                                        occupancyIsAvailable = true;
-                                        addMarkers();
-                                    }
-                                }, new Response.ErrorListener() {
-                                    @Override
-                                    public void onErrorResponse(VolleyError error) {
-                                        Log.i("Occupancy request", "Volley error: " + error);
-                                    }
-                                }));
-
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }, new Response.ErrorListener() {
+            DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference("carParks");
+            mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
-                public void onErrorResponse(VolleyError error) {
-                    Log.i("Lot request", "Volley error: " + error);
+                public void onDataChange(DataSnapshot carParksSnapshot) {
+
+                    for (DataSnapshot carParkSnapshot : carParksSnapshot.getChildren()) {
+                        CarPark carPark = carParkSnapshot.getValue(CarPark.class);
+                        Integer keyOfCarPark = Integer.valueOf(carParkSnapshot.getKey());
+                        carParkMap.put(keyOfCarPark - 1, carPark);
+
+                        DatabaseReference carParkLiveReference = FirebaseDatabase.getInstance().getReference("carParksLive");
+                        carParkLiveReference.child(String.valueOf(keyOfCarPark)).addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot carParkLiveSnapshot) {
+                                Integer keyOfCarParkLive = Integer.valueOf(carParkLiveSnapshot.getKey());
+                                carParkMap.get(keyOfCarParkLive - 1).updateLiveData(carParkLiveSnapshot.getValue(CarPark.class));
+                            }
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+                            }
+                        });
+                    }
+
+                    mSectionsPagerAdapter.notifyDataSetChanged();
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
                 }
             });
 
-            // Add the request to the RequestQueue.
-            queue.addToRequestQueue(lotRequest);
-
-
-            // String tarrifUrl = "https://api.parkright.io/smartlot/v1/Tariffs/e0c50d6bc5fc4223a37f3d893e0b7d27/UKLCYWC01/";
-
-//            queue.addToRequestQueue(new JsonArrayRequest(Request.Method.GET, tarrifUrl, null, new Response.Listener<JSONArray>() {
-//                @Override
-//                public void onResponse(JSONArray tarrifs) {
-//
-//                    System.out.println("tarrifs:\t" + tarrifs.length());
-//
-////                    for (int i = 0; i < occupancies.length(); i++) {
-////                        try {
-////
-////                            JSONObject occupancy = occupancies.getJSONObject(i);
-////
-////                            int lotCode = occupancy.getInt("LotCode");
-////                            CarPark carPark = carParkMap.get(lotCode);
-////
-////                            int free = occupancy.getInt("Free");
-////                            carPark.setFree(free);
-////
-////                        } catch (JSONException e) {
-////                            e.printStackTrace();
-////                        }
-////                    }
-////
-////                    occupancyIsAvailable = true;
-////                    addMarkers();
-//                }
-//            }, new Response.ErrorListener() {
-//                @Override
-//                public void onErrorResponse(VolleyError error) {
-//                    Log.i("Tarrif request", "Volley error: " + error);
-//                }
-//            }));
-
-            System.out.println("Lot request added.");
-
-            mDestinationMarker.showInfoWindow();
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(destination, 15.0f));
+            addMarkers();
         }
     }
 
@@ -390,9 +334,6 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-
-        Log.i("onConnected", "bundle:\t" + bundle);
-
         startLocationUpdates();
     }
 
@@ -406,15 +347,10 @@ public class MainActivity extends AppCompatActivity
 
     private void addMarkers() {
 
-        if (locationIsAvailable && occupancyIsAvailable) {
+        mClusterManager.clearItems();
 
-            locationIsAvailable = occupancyIsAvailable = false;
-
-            for (CarPark carPark : carParkMap.values()) {
-                if (carPark.getFree() > 0) {
-                    mClusterManager.addItem(carPark);
-                }
-            }
+        for (CarPark carPark : carParkMap.values()) {
+            mClusterManager.addItem(carPark);
         }
     }
 
@@ -429,9 +365,27 @@ public class MainActivity extends AppCompatActivity
 
         // Point the map's listeners at the listeners implemented by the cluster manager.
         this.mMap.setOnCameraIdleListener(mClusterManager);
+        mMap.setOnMarkerClickListener(mClusterManager);
 
-        this.mMap.setInfoWindowAdapter(new MyInfoWindowAdapter());
+        mClusterManager.setOnClusterItemClickListener(new ClusterManager.OnClusterItemClickListener<CarPark>() {
+            @Override
+            public boolean onClusterItemClick(CarPark selectedCarPark) {
 
+                int i = 0;
+
+                for (CarPark carPark : carParkMap.values()) {
+                    if (carPark.equals(selectedCarPark))
+                        break;
+                    i++;
+                }
+
+                mViewPager.setCurrentItem(i, true);
+
+                return false;
+            }
+        });
+
+        // this.mMap.setInfoWindowAdapter(new MyInfoWindowAdapter());
 
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
@@ -446,6 +400,7 @@ public class MainActivity extends AppCompatActivity
         mMap.setMyLocationEnabled(true);
 
         UiSettings settings = mMap.getUiSettings();
+        settings.setZoomControlsEnabled(false);
         settings.setMyLocationButtonEnabled(true);
         settings.setIndoorLevelPickerEnabled(false);
 
@@ -566,40 +521,91 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    class MyInfoWindowAdapter implements GoogleMap.InfoWindowAdapter {
+    @Override
+    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
 
-        private final View mWindow;
-        private final View mContents;
+    }
 
-        MyInfoWindowAdapter() {
-            mWindow = getLayoutInflater().inflate(R.layout.custom_info_window, null);
-            mContents = getLayoutInflater().inflate(R.layout.custom_info_contents, null);
+    @Override
+    public void onPageSelected(int position) {
+        CarPark carPark = carParkMap.get(position);
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(carPark.getPosition(), 15.0f));
+    }
+
+    @Override
+    public void onPageScrollStateChanged(int state) {
+
+    }
+
+    /**
+     * A placeholder fragment containing a simple view.
+     */
+    public static class PlaceholderFragment extends Fragment {
+        /**
+         * The fragment argument representing the section number for this
+         * fragment.
+         */
+        private static final String ARG_SECTION_NUMBER = "section_number";
+
+        public PlaceholderFragment() {
+        }
+
+        /**
+         * Returns a new instance of this fragment for the given section
+         * number.
+         */
+        public static MainActivity.PlaceholderFragment newInstance(CarPark carPark) {
+            MainActivity.PlaceholderFragment fragment = new MainActivity.PlaceholderFragment();
+
+            Bundle args = new Bundle();
+            args.putSerializable(ARG_SECTION_NUMBER, carPark);
+            fragment.setArguments(args);
+            return fragment;
         }
 
         @Override
-        public View getInfoWindow(Marker marker) {
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                                 Bundle savedInstanceState) {
+            View rootView = inflater.inflate(R.layout.fragment_car_park_list, container, false);
 
-            CarPark carPark = null;
+            Bundle args = getArguments();
+            CarPark carPark = (CarPark) args.getSerializable(ARG_SECTION_NUMBER);
 
-            for (CarPark park : carParkMap.values()) {
+            TextView textView = (TextView) rootView.findViewById(R.id.section_label);
+            textView.setText(carPark != null ? carPark.getDescription() : null);
 
-                if (park.getPosition().equals(new LatLng(marker.getPosition().latitude, marker.getPosition().longitude))) {
-                    carPark = park;
-                    break;
-                }
-            }
+            TextView occupancyTrendTextView = (TextView) rootView.findViewById(R.id.occupancy_trend);
+            occupancyTrendTextView.setText(carPark != null ? carPark.getOccupancyTrend() : null);
 
-            if (carPark != null) {
-                TextView city = (TextView) mWindow.findViewById(R.id.city_text_view);
-                city.setText(Integer.toString(carPark.getFree()));
-            }
+            return rootView;
+        }
+    }
 
-            return mWindow;
+    /**
+     * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
+     * one of the sections/tabs/pages.
+     */
+    public class SectionsPagerAdapter extends FragmentPagerAdapter {
+
+        public SectionsPagerAdapter(FragmentManager fm) {
+            super(fm);
         }
 
         @Override
-        public View getInfoContents(Marker marker) {
-            return mContents;
+        public Fragment getItem(int position) {
+            // getItem is called to instantiate the fragment for the given page.
+            // Return a PlaceholderFragment (defined as a static inner class below).
+            return MainActivity.PlaceholderFragment.newInstance(carParkMap.get(position));
+        }
+
+        @Override
+        public int getCount() {
+            return carParkMap.values().size();
+        }
+
+        @Override
+        public CharSequence getPageTitle(int position) {
+            return carParkMap.get(position).getDescription();
         }
     }
 }

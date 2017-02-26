@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "425340245013",
+    "firebase_url": "https://smart-car-park-application.firebaseio.com",
+    "project_id": "smart-car-park-application",
+    "storage_bucket": "smart-car-park-application.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:425340245013:android:5a7af863950076d7",
+        "android_client_info": {
+          "package_name": "uk.ac.aston.wadekabs.smartcarparkapplication"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "425340245013-nesdqedditnlikpa759fvv9ji0r4mrio.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "uk.ac.aston.wadekabs.smartcarparkapplication",
+            "certificate_hash": "17a9cf6e216ada6d780d6c2593ae773cb06bb233"
+          }
+        },
+        {
+          "client_id": "425340245013-jj59js2utjm4r0gnib2iqj2tb3fqnvqe.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBeC0_1BeLPvCKasxr_I5o5RwPXyeiWYfA"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "425340245013-jj59js2utjm4r0gnib2iqj2tb3fqnvqe.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

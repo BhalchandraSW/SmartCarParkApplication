@@ -32,7 +32,7 @@ class CarParkRenderer extends DefaultClusterRenderer<CarPark> {
         int bucket = 0;
 
         for (CarPark carPark : cluster.getItems()) {
-            bucket += carPark.getFree();
+            bucket += 1; // TODO: enter appropriate occupancy here
         }
 
         return bucket / cluster.getSize();
@@ -42,9 +42,11 @@ class CarParkRenderer extends DefaultClusterRenderer<CarPark> {
     protected void onBeforeClusterItemRendered(CarPark item, MarkerOptions markerOptions) {
         super.onBeforeClusterItemRendered(item, markerOptions);
 
-        int free = item.getFree();
 
-        mIconGenerator.setStyle(getStyle(free));
+        // TODO: change this to actual occupancy
+        int free = 1;
+
+        mIconGenerator.setStyle(getColor(free));
         Bitmap icon = mIconGenerator.makeIcon(Integer.toString(free));
         markerOptions.icon(BitmapDescriptorFactory.fromBitmap(icon));
     }
@@ -53,13 +55,21 @@ class CarParkRenderer extends DefaultClusterRenderer<CarPark> {
     protected int getColor(int clusterSize) {
         super.getColor(clusterSize);
 
-        if (clusterSize <= 3)
-            return -30720; // ORANGE
+//        float hue = 180.0f, saturation = 100.0f, value = 100.0f;
 
-        if (3 < clusterSize && clusterSize < 6)
-            return -16737844; // BLUE
+        return super.getColor(clusterSize);// Color.HSVToColor(new float[]{hue, saturation, value});
 
-        return -10053376; // GREEN
+//        int MAX_OCCUPANCY = 10;
+//
+//        return Color.rgb(0, 0, 255 - ((MAX_OCCUPANCY - clusterSize) * 20));
+
+//        if (clusterSize <= 3)
+//            return -30720; // ORANGE
+//
+//        if (3 < clusterSize && clusterSize < 6)
+//            return -16737844; // BLUE
+//
+//        return -10053376; // GREEN
     }
 
     private int getStyle(int free) {
