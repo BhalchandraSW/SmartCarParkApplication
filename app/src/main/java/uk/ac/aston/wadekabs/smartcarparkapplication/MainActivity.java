@@ -47,6 +47,7 @@ import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocomplete;
+import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -79,7 +80,7 @@ public class MainActivity extends AppCompatActivity
 
     private GoogleMap mMap;
     private Location mLastLocation;
-    private LatLng destination;
+    private LatLng mDestination;
     private Marker mDestinationMarker;
 
     private Map<Integer, CarPark> carParkMap = new LinkedHashMap<>();
@@ -135,17 +136,12 @@ public class MainActivity extends AppCompatActivity
 
         if (mGoogleApiClient == null) {
             mGoogleApiClient = new GoogleApiClient.Builder(this)
+                    .enableAutoManage(this, this)
                     .addConnectionCallbacks(this)
                     .addOnConnectionFailedListener(this)
                     .addApi(LocationServices.API)
                     .build();
         }
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        mGoogleApiClient.connect();
     }
 
     @Override
@@ -160,12 +156,6 @@ public class MainActivity extends AppCompatActivity
     protected void onPause() {
         super.onPause();
         stopLocationUpdates();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        mGoogleApiClient.disconnect();
     }
 
     @Override
@@ -203,9 +193,13 @@ public class MainActivity extends AppCompatActivity
             case R.id.app_bar_search:
 
                 try {
+
+                    new PlacePicker.IntentBuilder().build(this);
+
                     Intent intent =
                             new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_OVERLAY)
                                     .build(this);
+
                     startActivityForResult(intent, PLACE_AUTOCOMPLETE_REQUEST_CODE);
                 } catch (GooglePlayServicesRepairableException | GooglePlayServicesNotAvailableException e) {
                     // TODO: Handle the error.
@@ -249,14 +243,14 @@ public class MainActivity extends AppCompatActivity
     }
 
     private LatLng getDestination() {
-        if (destination == null && getLastLocation() != null) {
+        if (mDestination == null && getLastLocation() != null) {
             this.setDestination(new LatLng(getLastLocation().getLatitude(), getLastLocation().getLongitude()));
         }
-        return destination;
+        return mDestination;
     }
 
     private void setDestination(LatLng destination) {
-        this.destination = destination;
+        this.mDestination = destination;
         updateUI();
     }
 
@@ -266,7 +260,7 @@ public class MainActivity extends AppCompatActivity
 
             if (mDestinationMarker == null) {
 
-                mDestinationMarker = mMap.addMarker(new MarkerOptions().position(destination).draggable(true));
+                mDestinationMarker = mMap.addMarker(new MarkerOptions().position(mDestination).draggable(true));
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 
@@ -281,7 +275,7 @@ public class MainActivity extends AppCompatActivity
                 }
 
             } else {
-                mDestinationMarker.setPosition(destination);
+                mDestinationMarker.setPosition(mDestination);
             }
 
             DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference("carParks");
