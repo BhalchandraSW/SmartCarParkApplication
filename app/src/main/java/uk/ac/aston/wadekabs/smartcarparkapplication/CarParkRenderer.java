@@ -70,7 +70,7 @@ class CarParkRenderer extends DefaultClusterRenderer<CarPark> {
         int bucket = 0;
 
         for (CarPark carPark : cluster.getItems()) {
-            bucket += (carPark.getCapacity() - carPark.getOccupancy()); // TODO: enter appropriate occupancy here
+            bucket += (carPark.getCapacity() - carPark.getOccupancy());
         }
 
         return bucket / cluster.getSize();
@@ -80,8 +80,6 @@ class CarParkRenderer extends DefaultClusterRenderer<CarPark> {
     protected void onBeforeClusterItemRendered(CarPark carPark, MarkerOptions markerOptions) {
         super.onBeforeClusterItemRendered(carPark, markerOptions);
 
-
-        // TODO: change this to actual occupancy
         int free = carPark.getCapacity() - carPark.getOccupancy();
 
         mIconGenerator.setStyle(getStyle(free));
