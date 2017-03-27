@@ -529,7 +529,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onPageSelected(int position) {
         CarPark carPark = carParkMap.get(position);
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(carPark.getPosition(), 15.0f));
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(carPark.getPosition(), 15.0f));
     }
 
     @Override
