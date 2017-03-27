@@ -2,6 +2,7 @@ package uk.ac.aston.wadekabs.smartcarparkapplication;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
@@ -21,9 +22,46 @@ class CarParkRenderer extends DefaultClusterRenderer<CarPark> {
 
     private final IconGenerator mIconGenerator;
 
+    private static final int STYLE_LOW = 8;
+    private static final int STYLE_MODERATE = 9;
+    private static final int STYLE_HIGH = 10;
+
     CarParkRenderer(Context context, GoogleMap map, ClusterManager<CarPark> clusterManager) {
         super(context, map, clusterManager);
-        mIconGenerator = new IconGenerator(context);
+        mIconGenerator = new IconGenerator(context) {
+
+            @Override
+            public void setStyle(int style) {
+
+                super.setStyle(STYLE_BLUE);
+
+                int colour = Color.BLUE;
+
+                int red = Color.red(colour);
+                int green = Color.green(colour);
+                int blue = Color.blue(colour);
+
+                if (style >= 8) {
+                    red = Math.round(Math.max(0, red - 255 / 4));
+                    green = Math.round(Math.max(0, green - 255 / 4));
+                    blue = Math.round(Math.max(0, blue - 255 / 4));
+                }
+
+                if (style >= 9) {
+                    red = Math.round(Math.max(0, red - 255 / 4));
+                    green = Math.round(Math.max(0, green - 255 / 4));
+                    blue = Math.round(Math.max(0, blue - 255 / 4));
+                }
+
+                if (style >= 10) {
+                    red = Math.round(Math.max(0, red - 255 / 4));
+                    green = Math.round(Math.max(0, green - 255 / 4));
+                    blue = Math.round(Math.max(0, blue - 255 / 4));
+                }
+
+                this.setColor(Color.rgb(red, green, blue));
+            }
+        };
     }
 
     @Override
@@ -32,21 +70,21 @@ class CarParkRenderer extends DefaultClusterRenderer<CarPark> {
         int bucket = 0;
 
         for (CarPark carPark : cluster.getItems()) {
-            bucket += 1; // TODO: enter appropriate occupancy here
+            bucket += (carPark.getCapacity() - carPark.getOccupancy()); // TODO: enter appropriate occupancy here
         }
 
         return bucket / cluster.getSize();
     }
 
     @Override
-    protected void onBeforeClusterItemRendered(CarPark item, MarkerOptions markerOptions) {
-        super.onBeforeClusterItemRendered(item, markerOptions);
+    protected void onBeforeClusterItemRendered(CarPark carPark, MarkerOptions markerOptions) {
+        super.onBeforeClusterItemRendered(carPark, markerOptions);
 
 
         // TODO: change this to actual occupancy
-        int free = 1;
+        int free = carPark.getCapacity() - carPark.getOccupancy();
 
-        mIconGenerator.setStyle(getColor(free));
+        mIconGenerator.setStyle(getStyle(free));
         Bitmap icon = mIconGenerator.makeIcon(Integer.toString(free));
         markerOptions.icon(BitmapDescriptorFactory.fromBitmap(icon));
     }
@@ -55,31 +93,41 @@ class CarParkRenderer extends DefaultClusterRenderer<CarPark> {
     protected int getColor(int clusterSize) {
         super.getColor(clusterSize);
 
-//        float hue = 180.0f, saturation = 100.0f, value = 100.0f;
+        int colour = Color.BLUE;
 
-        return super.getColor(clusterSize);// Color.HSVToColor(new float[]{hue, saturation, value});
+        int red = Color.red(colour);
+        int green = Color.green(colour);
+        int blue = Color.blue(colour);
 
-//        int MAX_OCCUPANCY = 10;
-//
-//        return Color.rgb(0, 0, 255 - ((MAX_OCCUPANCY - clusterSize) * 20));
+        if (clusterSize > 423) {
+            red = Math.round(Math.max(0, red - 255 / 3));
+            green = Math.round(Math.max(0, green - 255 / 3));
+            blue = Math.round(Math.max(0, blue - 255 / 3));
+        }
 
-//        if (clusterSize <= 3)
-//            return -30720; // ORANGE
-//
-//        if (3 < clusterSize && clusterSize < 6)
-//            return -16737844; // BLUE
-//
-//        return -10053376; // GREEN
+        if (clusterSize > 846) {
+            red = Math.round(Math.max(0, red - 255 / 3));
+            green = Math.round(Math.max(0, green - 255 / 3));
+            blue = Math.round(Math.max(0, blue - 255 / 3));
+        }
+
+        if (clusterSize > 1269) {
+            red = Math.round(Math.max(0, red - 255 / 3));
+            green = Math.round(Math.max(0, green - 255 / 3));
+            blue = Math.round(Math.max(0, blue - 255 / 3));
+        }
+
+        return Color.rgb(red, green, blue);
     }
 
     private int getStyle(int free) {
 
-        if (free <= 3)
-            return IconGenerator.STYLE_ORANGE;
+        if (free < 423)
+            return STYLE_LOW;
 
-        if (3 < free && free < 6)
-            return IconGenerator.STYLE_BLUE;
+        if (free < 846)
+            return STYLE_MODERATE;
 
-        return IconGenerator.STYLE_GREEN;
+        return STYLE_HIGH;
     }
 }

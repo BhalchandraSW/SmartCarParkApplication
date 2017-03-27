@@ -25,7 +25,7 @@ public class CarPark implements ClusterItem, Serializable {
     private String state;
     private double queueTime;
     private String lastUpdated;
-    
+
     public int getCapacity() {
         return capacity;
     }
@@ -164,8 +164,13 @@ public class CarPark implements ClusterItem, Serializable {
     @Override
     public boolean equals(Object object) {
 
-        CarPark carPark = (CarPark) object;
-        return carPark.getSystemCodeNumber().equals(this.getSystemCodeNumber());
+        if (super.equals(object))
+            return true;
+        if (object != null && object instanceof CarPark) {
+            CarPark carPark = (CarPark) object;
+            return carPark.getSystemCodeNumber().equals(this.getSystemCodeNumber());
+        }
+        return false;
     }
 
     @Override
