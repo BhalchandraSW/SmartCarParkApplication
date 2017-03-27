@@ -177,6 +177,16 @@ public class CarPark implements ClusterItem, Serializable {
     public LatLng getPosition() {
         return new LatLng(location.getLat(), location.getLng());
     }
+
+    @Override
+    public String getTitle() {
+        return description;
+    }
+
+    @Override
+    public String getSnippet() {
+        return description;
+    }
 }
 
 
