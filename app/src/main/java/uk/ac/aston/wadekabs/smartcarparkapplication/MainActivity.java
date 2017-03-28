@@ -348,17 +348,17 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void setMap(GoogleMap mMap) {
+    private void setMap(GoogleMap map) {
 
-        this.mMap = mMap;
+        mMap = map;
 
         // Initialize the manager with the context and the map.
         // (Activity extends context, so we can pass 'this' in the constructor.)
-        mClusterManager = new ClusterManager<>(this, this.mMap);
-        mClusterManager.setRenderer(new CarParkRenderer(getApplicationContext(), this.mMap, mClusterManager));
+        mClusterManager = new ClusterManager<>(this, mMap);
+        mClusterManager.setRenderer(new CarParkRenderer(getApplicationContext(), mMap, mClusterManager));
 
         // Point the map's listeners at the listeners implemented by the cluster manager.
-        this.mMap.setOnCameraIdleListener(mClusterManager);
+        mMap.setOnCameraIdleListener(mClusterManager);
         mMap.setOnMarkerClickListener(mClusterManager);
 
         mClusterManager.setOnClusterItemClickListener(new ClusterManager.OnClusterItemClickListener<CarPark>() {
@@ -391,9 +391,9 @@ public class MainActivity extends AppCompatActivity
             // for ActivityCompat#requestPermissions for more details.
             return;
         }
-        mMap.setMyLocationEnabled(true);
+        map.setMyLocationEnabled(true);
 
-        UiSettings settings = mMap.getUiSettings();
+        UiSettings settings = map.getUiSettings();
         settings.setZoomControlsEnabled(false);
         settings.setMyLocationButtonEnabled(true);
         settings.setIndoorLevelPickerEnabled(false);
@@ -427,7 +427,7 @@ public class MainActivity extends AppCompatActivity
             }
             return;
         }
-        this.setLastLocation(LocationServices.FusedLocationApi.getLastLocation(
+        setLastLocation(LocationServices.FusedLocationApi.getLastLocation(
                 mGoogleApiClient));
 
         LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
