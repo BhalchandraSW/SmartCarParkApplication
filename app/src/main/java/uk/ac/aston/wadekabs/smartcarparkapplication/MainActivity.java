@@ -47,7 +47,6 @@ import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocomplete;
-import com.google.android.gms.location.places.ui.PlacePicker;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -83,6 +82,11 @@ public class MainActivity extends AppCompatActivity
     private LatLng mDestination;
     private Marker mDestinationMarker;
 
+    /**
+     * Map of car parks
+     * key is primary key of car park
+     * value is car park object
+     */
     private Map<Integer, CarPark> carParkMap = new LinkedHashMap<>();
 
     private ClusterManager<CarPark> mClusterManager;
@@ -193,13 +197,9 @@ public class MainActivity extends AppCompatActivity
             case R.id.app_bar_search:
 
                 try {
-
-                    new PlacePicker.IntentBuilder().build(this);
-
                     Intent intent =
                             new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_OVERLAY)
                                     .build(this);
-
                     startActivityForResult(intent, PLACE_AUTOCOMPLETE_REQUEST_CODE);
                 } catch (GooglePlayServicesRepairableException | GooglePlayServicesNotAvailableException e) {
                     // TODO: Handle the error.
@@ -284,12 +284,14 @@ public class MainActivity extends AppCompatActivity
                 public void onDataChange(DataSnapshot carParksSnapshot) {
 
                     for (DataSnapshot carParkSnapshot : carParksSnapshot.getChildren()) {
+
                         CarPark carPark = carParkSnapshot.getValue(CarPark.class);
                         Integer keyOfCarPark = Integer.valueOf(carParkSnapshot.getKey());
                         carParkMap.put(keyOfCarPark - 1, carPark);
 
                         DatabaseReference carParkLiveReference = FirebaseDatabase.getInstance().getReference("carParksLive");
                         carParkLiveReference.child(String.valueOf(keyOfCarPark)).addListenerForSingleValueEvent(new ValueEventListener() {
+
                             @Override
                             public void onDataChange(DataSnapshot carParkLiveSnapshot) {
                                 Integer keyOfCarParkLive = Integer.valueOf(carParkLiveSnapshot.getKey());
@@ -378,8 +380,6 @@ public class MainActivity extends AppCompatActivity
                 return false;
             }
         });
-
-        // this.mMap.setInfoWindowAdapter(new MyInfoWindowAdapter());
 
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
