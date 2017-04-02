@@ -260,7 +260,7 @@ public class MainActivity extends AppCompatActivity
 
             if (mDestinationMarker == null) {
 
-                mDestinationMarker = mMap.addMarker(new MarkerOptions().position(mDestination).draggable(true));
+                mDestinationMarker = mMap.addMarker(new MarkerOptions().position(mDestination));
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 
@@ -277,6 +277,8 @@ public class MainActivity extends AppCompatActivity
             } else {
                 mDestinationMarker.setPosition(mDestination);
             }
+
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(mDestination, 15.0f));
 
             DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference("carParks");
             mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -505,6 +507,7 @@ public class MainActivity extends AppCompatActivity
                 Log.i("Place onActivityResult", "Place: " + place.getName());
                 MainActivity.this.setDestination(place.getLatLng());
                 mDestinationMarker.setTitle(place.getName().toString());
+
             } else if (resultCode == PlaceAutocomplete.RESULT_ERROR) {
                 Status status = PlaceAutocomplete.getStatus(this, data);
                 // TODO: Handle the error.
