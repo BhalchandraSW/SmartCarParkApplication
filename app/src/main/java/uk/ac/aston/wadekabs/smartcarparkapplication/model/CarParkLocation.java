@@ -1,10 +1,12 @@
 package uk.ac.aston.wadekabs.smartcarparkapplication.model;
 
+import java.io.Serializable;
+
 /**
  * Created by Bhalchandra Wadekar on 26/02/2017.
  */
 
-public class CarParkLocation {
+public class CarParkLocation implements Serializable {
 
     private double lat;
     private double lng;
