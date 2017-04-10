@@ -6,12 +6,12 @@ import java.io.Serializable;
  * Created by Bhalchandra Wadekar on 26/02/2017.
  */
 
-public class CarParkLocation implements Serializable {
+class CarParkLocation implements Serializable {
 
     private double lat;
     private double lng;
 
-    public double getLat() {
+    double getLat() {
         return lat;
     }
 
@@ -19,7 +19,7 @@ public class CarParkLocation implements Serializable {
         this.lat = lat;
     }
 
-    public double getLng() {
+    double getLng() {
         return lng;
     }
 
