@@ -32,6 +32,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.firebase.ui.auth.AuthUI;
+import com.firebase.ui.auth.ErrorCodes;
+import com.firebase.ui.auth.IdpResponse;
+import com.firebase.ui.auth.ResultCodes;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
@@ -63,6 +67,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.maps.android.clustering.ClusterManager;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -76,6 +81,7 @@ public class MainActivity extends AppCompatActivity
     public final static int REQUEST_CHECK_LOCATION_SETTINGS = 1;
     public final static int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 2;
     public final static int PLACE_AUTOCOMPLETE_REQUEST_CODE = 3;
+    private static final int RC_SIGN_IN = 4;
 
     private GoogleApiClient mGoogleApiClient;
 
@@ -141,6 +147,14 @@ public class MainActivity extends AppCompatActivity
         mViewPager.addOnPageChangeListener(this);
 
         buildGoogleApiClient();
+
+        startActivityForResult(
+                AuthUI.getInstance()
+                        .createSignInIntentBuilder()
+                        .setProviders(Collections.singletonList(
+                                new AuthUI.IdpConfig.Builder(AuthUI.GOOGLE_PROVIDER).build()))
+                        .build(),
+                RC_SIGN_IN);
     }
 
     protected synchronized void buildGoogleApiClient() {
@@ -507,20 +521,58 @@ public class MainActivity extends AppCompatActivity
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == PLACE_AUTOCOMPLETE_REQUEST_CODE) {
-            if (resultCode == RESULT_OK) {
-                Place place = PlaceAutocomplete.getPlace(this, data);
-                Log.i("Place onActivityResult", "Place: " + place.getName());
-                MainActivity.this.setDestination(place.getLatLng());
-                mDestinationMarker.setTitle(place.getName().toString());
+        switch (requestCode) {
+            case PLACE_AUTOCOMPLETE_REQUEST_CODE:
+                if (resultCode == RESULT_OK) {
+                    Place place = PlaceAutocomplete.getPlace(this, data);
+                    Log.i("Place onActivityResult", "Place: " + place.getName());
+                    MainActivity.this.setDestination(place.getLatLng());
+                    mDestinationMarker.setTitle(place.getName().toString());
 
-            } else if (resultCode == PlaceAutocomplete.RESULT_ERROR) {
-                Status status = PlaceAutocomplete.getStatus(this, data);
-                // TODO: Handle the error.
-                Log.i("Place onActivityResult", status.getStatusMessage());
-            } else if (resultCode == RESULT_CANCELED) {
-                // The user canceled the operation.
-            }
+                } else if (resultCode == PlaceAutocomplete.RESULT_ERROR) {
+                    Status status = PlaceAutocomplete.getStatus(this, data);
+                    // TODO: Handle the error.
+                    Log.i("Place onActivityResult", status.getStatusMessage());
+                } else if (resultCode == RESULT_CANCELED) {
+                    // The user canceled the operation.
+                }
+                break;
+
+            case RC_SIGN_IN:
+
+                IdpResponse response = IdpResponse.fromResultIntent(data);
+
+                // Successfully signed in
+                if (resultCode == ResultCodes.OK) {
+//                    startActivity(new Intent(MainActivity.this, response));
+//                    finish();
+                    return;
+                } else {
+
+                    // Sign in failed
+                    if (response == null) {
+                        // User pressed back button
+                        // showSnackbar(R.string.sign_in_cancelled);
+                        return;
+                    }
+
+                    if (response.getErrorCode() == ErrorCodes.NO_NETWORK) {
+
+                        System.out.println("Authentication:\tNo network connection");
+
+                        // showSnackbar(R.string.no_internet_connection);
+                        return;
+                    }
+
+                    if (response.getErrorCode() == ErrorCodes.UNKNOWN_ERROR) {
+                        // showSnackbar(R.string.unknown_error);
+                        return;
+                    }
+                }
+
+                // showSnackbar(R.string.unknown_sign_in_response);
+
+                break;
         }
     }
 

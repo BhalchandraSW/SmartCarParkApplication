@@ -15,11 +15,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "425340245013-nesdqedditnlikpa759fvv9ji0r4mrio.apps.googleusercontent.com",
+          "client_id": "425340245013-ji12hab2b591lj6unmdur9r1lh6mops7.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "uk.ac.aston.wadekabs.smartcarparkapplication",
-            "certificate_hash": "17a9cf6e216ada6d780d6c2593ae773cb06bb233"
+            "certificate_hash": "b234e7cbfed7097a6cd2f52078722f198431b3fc"
           }
         },
         {
