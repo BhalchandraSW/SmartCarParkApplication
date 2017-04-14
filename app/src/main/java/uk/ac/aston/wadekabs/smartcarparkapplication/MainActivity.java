@@ -4,11 +4,8 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -18,6 +15,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
@@ -66,7 +64,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.maps.android.clustering.ClusterManager;
+import com.google.maps.android.ui.IconGenerator;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -282,17 +282,12 @@ public class MainActivity extends AppCompatActivity
 
                 mDestinationMarker = mMap.addMarker(new MarkerOptions().position(mDestination));
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                Drawable drawable = ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_pin_drop_black_24dp);
 
-                    Drawable drawable = getResources().getDrawable(R.drawable.ic_flag_black_24dp, null);
+                IconGenerator generator = new IconGenerator(getApplicationContext());
+                generator.setBackground(drawable);
 
-                    Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
-                    Canvas canvas = new Canvas(bitmap);
-                    drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
-                    drawable.draw(canvas);
-
-                    mDestinationMarker.setIcon(BitmapDescriptorFactory.fromBitmap(bitmap));
-                }
+                mDestinationMarker.setIcon(BitmapDescriptorFactory.fromBitmap(generator.makeIcon()));
 
             } else {
                 mDestinationMarker.setPosition(mDestination);
@@ -385,6 +380,7 @@ public class MainActivity extends AppCompatActivity
         mMap.setOnCameraIdleListener(mClusterManager);
         mMap.setOnMarkerClickListener(mClusterManager);
 
+
         mClusterManager.setOnClusterItemClickListener(new ClusterManager.OnClusterItemClickListener<CarPark>() {
             @Override
             public boolean onClusterItemClick(CarPark selectedCarPark) {
@@ -398,6 +394,18 @@ public class MainActivity extends AppCompatActivity
                 }
 
                 mViewPager.setCurrentItem(i, true);
+
+                Collection<Marker> markers = mClusterManager.getMarkerCollection().getMarkers();
+
+                for (Marker marker : markers) {
+                    if (marker.getPosition().equals(selectedCarPark.getPosition())) {
+                        marker.setAlpha(1.0f);
+                        marker.setZIndex(1.0f);
+                    } else {
+                        marker.setAlpha(0.5f);
+                        marker.setZIndex(0.0f);
+                    }
+                }
 
                 // for not showing info window
                 return true;
@@ -583,7 +591,21 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onPageSelected(int position) {
+
         CarPark carPark = carParkMap.get(position);
+
+        Collection<Marker> markers = mClusterManager.getMarkerCollection().getMarkers();
+
+        for (Marker marker : markers) {
+            if (marker.getPosition().equals(carPark.getPosition())) {
+                marker.setAlpha(1.0f);
+                marker.setZIndex(1.0f);
+            } else {
+                marker.setAlpha(0.5f);
+                marker.setZIndex(0.0f);
+            }
+        }
+
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(carPark.getPosition(), 15.0f));
     }
 

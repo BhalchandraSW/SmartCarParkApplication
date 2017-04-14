@@ -49,6 +49,7 @@ class CarParkRenderer extends DefaultClusterRenderer<CarPark> {
                 int blue = Color.blue(colour);
 
                 if (style >= 8) {
+
                     red = Math.round(Math.max(0, red - 255 / 4));
                     green = Math.round(Math.max(0, green - 255 / 4));
                     blue = Math.round(Math.max(0, blue - 255 / 4));
@@ -67,6 +68,19 @@ class CarParkRenderer extends DefaultClusterRenderer<CarPark> {
                 }
 
                 this.setColor(Color.rgb(red, green, blue));
+
+                switch (style) {
+                    case 8:
+                        super.setStyle(STYLE_ORANGE);
+                        break;
+                    case 9:
+                        super.setStyle(STYLE_BLUE);
+                        break;
+                    case 10:
+                        super.setStyle(STYLE_GREEN);
+                        break;
+
+                }
             }
         };
     }
