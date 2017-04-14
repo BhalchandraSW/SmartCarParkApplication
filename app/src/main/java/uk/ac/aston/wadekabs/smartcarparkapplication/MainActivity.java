@@ -399,7 +399,8 @@ public class MainActivity extends AppCompatActivity
 
                 mViewPager.setCurrentItem(i, true);
 
-                return false;
+                // for not showing info window
+                return true;
             }
         });
 

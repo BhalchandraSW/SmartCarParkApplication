@@ -1,8 +1,10 @@
 package uk.ac.aston.wadekabs.smartcarparkapplication;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.TextView;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
@@ -21,13 +23,18 @@ import uk.ac.aston.wadekabs.smartcarparkapplication.model.CarPark;
 class CarParkRenderer extends DefaultClusterRenderer<CarPark> {
 
     private final IconGenerator mIconGenerator;
+    private Context mContext;
 
     private static final int STYLE_LOW = 8;
     private static final int STYLE_MODERATE = 9;
     private static final int STYLE_HIGH = 10;
 
     CarParkRenderer(Context context, GoogleMap map, ClusterManager<CarPark> clusterManager) {
+
         super(context, map, clusterManager);
+
+        mContext = context;
+
         mIconGenerator = new IconGenerator(context) {
 
             @Override
@@ -83,8 +90,15 @@ class CarParkRenderer extends DefaultClusterRenderer<CarPark> {
         int free = carPark.getCapacity() - carPark.getOccupancy();
 
         mIconGenerator.setStyle(getStyle(free));
-        Bitmap icon = mIconGenerator.makeIcon(Integer.toString(free));
-        markerOptions.icon(BitmapDescriptorFactory.fromBitmap(icon));
+
+        View view = LayoutInflater.from(mContext).inflate(R.layout.marker, null);
+
+        TextView price = (TextView) view.findViewById(R.id.price);
+        price.setText(Integer.toString(free));
+
+        mIconGenerator.setContentView(view);
+
+        markerOptions.icon(BitmapDescriptorFactory.fromBitmap(mIconGenerator.makeIcon()));
     }
 
     @Override

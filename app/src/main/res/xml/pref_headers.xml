@@ -18,7 +18,7 @@
 
     <header
         android:fragment="uk.ac.aston.wadekabs.smartcarparkapplication.SettingsActivity$DataSyncPreferenceFragment"
-        android:icon="@drawable/ic_filter_list_black_24dp"
+        android:icon="@drawable/ic_filter_list_black"
         android:title="@string/filter" />
 
 </preference-headers>
