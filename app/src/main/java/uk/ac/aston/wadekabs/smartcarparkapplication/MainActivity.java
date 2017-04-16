@@ -12,15 +12,15 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
-import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DividerItemDecoration;
+import android.support.v7.widget.PagerSnapHelper;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SnapHelper;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -28,6 +28,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.firebase.ui.auth.AuthUI;
@@ -66,9 +67,11 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.ui.IconGenerator;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import uk.ac.aston.wadekabs.smartcarparkapplication.model.CarPark;
@@ -76,7 +79,7 @@ import uk.ac.aston.wadekabs.smartcarparkapplication.model.CarPark;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
-        LocationListener, ViewPager.OnPageChangeListener {
+        LocationListener {
 
     public final static int REQUEST_CHECK_LOCATION_SETTINGS = 1;
     public final static int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 2;
@@ -96,23 +99,12 @@ public class MainActivity extends AppCompatActivity
      * value is car park object
      */
     private Map<Integer, CarPark> carParkMap = new LinkedHashMap<>();
+    private List<CarPark> mCarParkList = new ArrayList<>();
 
     private ClusterManager<CarPark> mClusterManager;
 
-    /**
-     * The {@link android.support.v4.view.PagerAdapter} that will provide
-     * fragments for each of the sections. We use a
-     * {@link FragmentPagerAdapter} derivative, which will keep every
-     * loaded fragment in memory. If this becomes too memory intensive, it
-     * may be best to switch to a
-     * {@link android.support.v4.app.FragmentStatePagerAdapter}.
-     */
-    private MainActivity.SectionsPagerAdapter mSectionsPagerAdapter;
-
-    /**
-     * The {@link ViewPager} that will host the section contents.
-     */
-    private ViewPager mViewPager;
+    private RecyclerView mRecyclerView;
+    private CarParkListAdapter mAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -137,15 +129,6 @@ public class MainActivity extends AppCompatActivity
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        // Create the adapter that will return a fragment for each of the three
-        // primary sections of the activity.
-        mSectionsPagerAdapter = new MainActivity.SectionsPagerAdapter(getSupportFragmentManager());
-
-        // Set up the ViewPager with the sections adapter.
-        mViewPager = (ViewPager) findViewById(R.id.container);
-        mViewPager.setAdapter(mSectionsPagerAdapter);
-        mViewPager.addOnPageChangeListener(this);
-
         buildGoogleApiClient();
 
         startActivityForResult(
@@ -155,6 +138,16 @@ public class MainActivity extends AppCompatActivity
                                 new AuthUI.IdpConfig.Builder(AuthUI.GOOGLE_PROVIDER).build()))
                         .build(),
                 RC_SIGN_IN);
+
+        mAdapter = new CarParkListAdapter(mCarParkList);
+        mRecyclerView = (RecyclerView) findViewById(R.id.car_park_list);
+        mRecyclerView.setAdapter(mAdapter);
+
+        SnapHelper helper = new PagerSnapHelper();
+        helper.attachToRecyclerView(mRecyclerView);
+
+        DividerItemDecoration decoration = new DividerItemDecoration(mRecyclerView.getContext(), LinearLayout.VERTICAL);
+        mRecyclerView.addItemDecoration(decoration);
     }
 
     protected synchronized void buildGoogleApiClient() {
@@ -162,7 +155,6 @@ public class MainActivity extends AppCompatActivity
             mGoogleApiClient = new GoogleApiClient.Builder(this)
                     .enableAutoManage(this, this)
                     .addConnectionCallbacks(this)
-                    .addOnConnectionFailedListener(this)
                     .addApi(LocationServices.API)
                     .build();
         }
@@ -282,9 +274,9 @@ public class MainActivity extends AppCompatActivity
 
                 mDestinationMarker = mMap.addMarker(new MarkerOptions().position(mDestination));
 
-                Drawable drawable = ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_pin_drop_black_24dp);
+                Drawable drawable = ContextCompat.getDrawable(this, R.drawable.ic_pin_drop_black_24dp);
 
-                IconGenerator generator = new IconGenerator(getApplicationContext());
+                IconGenerator generator = new IconGenerator(this);
                 generator.setBackground(drawable);
 
                 mDestinationMarker.setIcon(BitmapDescriptorFactory.fromBitmap(generator.makeIcon()));
@@ -312,7 +304,13 @@ public class MainActivity extends AppCompatActivity
                             @Override
                             public void onDataChange(DataSnapshot carParkLiveSnapshot) {
                                 Integer keyOfCarParkLive = Integer.valueOf(carParkLiveSnapshot.getKey());
-                                carParkMap.get(keyOfCarParkLive - 1).updateLiveData(carParkLiveSnapshot.getValue(CarPark.class));
+                                CarPark carPark1 = carParkMap.get(keyOfCarParkLive - 1);
+                                carPark1.updateLiveData(carParkLiveSnapshot.getValue(CarPark.class));
+                                if (mCarParkList.contains(carPark1)) {
+                                    mCarParkList.remove(carPark1);
+                                }
+                                mCarParkList.add(carPark1);
+                                mAdapter.notifyDataSetChanged();
                             }
 
                             @Override
@@ -321,7 +319,6 @@ public class MainActivity extends AppCompatActivity
                         });
                     }
 
-                    mSectionsPagerAdapter.notifyDataSetChanged();
                 }
 
                 @Override
@@ -371,29 +368,15 @@ public class MainActivity extends AppCompatActivity
 
         mMap = map;
 
-        // Initialize the manager with the context and the map.
-        // (Activity extends context, so we can pass 'this' in the constructor.)
         mClusterManager = new ClusterManager<>(this, mMap);
-        mClusterManager.setRenderer(new CarParkRenderer(getApplicationContext(), mMap, mClusterManager));
+        mClusterManager.setRenderer(new CarParkRenderer(this, mMap, mClusterManager));
 
-        // Point the map's listeners at the listeners implemented by the cluster manager.
         mMap.setOnCameraIdleListener(mClusterManager);
         mMap.setOnMarkerClickListener(mClusterManager);
-
 
         mClusterManager.setOnClusterItemClickListener(new ClusterManager.OnClusterItemClickListener<CarPark>() {
             @Override
             public boolean onClusterItemClick(CarPark selectedCarPark) {
-
-                int i = 0;
-
-                for (CarPark carPark : carParkMap.values()) {
-                    if (carPark.equals(selectedCarPark))
-                        break;
-                    i++;
-                }
-
-                mViewPager.setCurrentItem(i, true);
 
                 Collection<Marker> markers = mClusterManager.getMarkerCollection().getMarkers();
 
@@ -425,7 +408,6 @@ public class MainActivity extends AppCompatActivity
         map.setMyLocationEnabled(true);
 
         UiSettings settings = map.getUiSettings();
-        settings.setZoomControlsEnabled(false);
         settings.setMyLocationButtonEnabled(true);
         settings.setIndoorLevelPickerEnabled(false);
 
@@ -585,103 +567,55 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    @Override
-    public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-    }
+    class CarParkListAdapter extends RecyclerView.Adapter<CarParkListAdapter.CarParkViewHolder> {
 
-    @Override
-    public void onPageSelected(int position) {
+        private List<CarPark> mCarParkList;
 
-        CarPark carPark = carParkMap.get(position);
+        private CarParkListAdapter(List<CarPark> carParkList) {
+            mCarParkList = carParkList;
+        }
 
-        Collection<Marker> markers = mClusterManager.getMarkerCollection().getMarkers();
+        @Override
+        public CarParkViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.car_park, parent, false);
+            return new CarParkViewHolder(view);
+        }
 
-        for (Marker marker : markers) {
-            if (marker.getPosition().equals(carPark.getPosition())) {
-                marker.setAlpha(1.0f);
-                marker.setZIndex(1.0f);
-            } else {
-                marker.setAlpha(0.5f);
-                marker.setZIndex(0.0f);
+        @Override
+        public void onBindViewHolder(CarParkViewHolder holder, int position) {
+            CarPark carPark = mCarParkList.get(position);
+            holder.mName.setText(carPark.getTitle());
+            holder.mOccupancyTrend.setText(carPark.getOccupancyTrend());
+        }
+
+        @Override
+        public int getItemCount() {
+            return mCarParkList.size();
+        }
+
+        class CarParkViewHolder extends RecyclerView.ViewHolder {
+
+            private TextView mName;
+            private TextView mOccupancyTrend;
+
+            CarParkViewHolder(View itemView) {
+                super(itemView);
+
+                mName = (TextView) itemView.findViewById(R.id.name);
+                mOccupancyTrend = (TextView) itemView.findViewById(R.id.occupancy_trend);
+
+                itemView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+
+                        int position = getAdapterPosition();
+
+                        CarPark carPark = mCarParkList.get(position);
+                        System.out.println(carPark);
+                    }
+                });
             }
-        }
-
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(carPark.getPosition(), 15.0f));
-    }
-
-    @Override
-    public void onPageScrollStateChanged(int state) {
-    }
-
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-    public static class PlaceholderFragment extends Fragment {
-        /**
-         * The fragment argument representing the section number for this
-         * fragment.
-         */
-        private static final String ARG_SECTION_NUMBER = "section_number";
-
-        public PlaceholderFragment() {
-        }
-
-        /**
-         * Returns a new instance of this fragment for the given section
-         * number.
-         */
-        public static MainActivity.PlaceholderFragment newInstance(CarPark carPark) {
-            MainActivity.PlaceholderFragment fragment = new MainActivity.PlaceholderFragment();
-
-            Bundle args = new Bundle();
-            args.putSerializable(ARG_SECTION_NUMBER, carPark);
-            fragment.setArguments(args);
-            return fragment;
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                 Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_car_park_list, container, false);
-
-            Bundle args = getArguments();
-            CarPark carPark = (CarPark) args.getSerializable(ARG_SECTION_NUMBER);
-
-            TextView textView = (TextView) rootView.findViewById(R.id.section_label);
-            textView.setText(carPark != null ? carPark.getDescription() : null);
-
-            TextView occupancyTrendTextView = (TextView) rootView.findViewById(R.id.occupancy_trend);
-            occupancyTrendTextView.setText(carPark != null ? carPark.getOccupancyTrend() : null);
-
-            return rootView;
-        }
-    }
-
-    /**
-     * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
-     * one of the sections/tabs/pages.
-     */
-    private class SectionsPagerAdapter extends FragmentPagerAdapter {
-
-        SectionsPagerAdapter(FragmentManager fm) {
-            super(fm);
-        }
-
-        @Override
-        public Fragment getItem(int position) {
-            // getItem is called to instantiate the fragment for the given page.
-            // Return a PlaceholderFragment (defined as a static inner class below).
-            return MainActivity.PlaceholderFragment.newInstance(carParkMap.get(position));
-        }
-
-        @Override
-        public int getCount() {
-            return carParkMap.values().size();
-        }
-
-        @Override
-        public CharSequence getPageTitle(int position) {
-            return carParkMap.get(position).getDescription();
         }
     }
 }
