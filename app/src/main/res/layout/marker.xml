@@ -3,7 +3,7 @@
     android:id="@+id/price"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:drawableTop="@drawable/ic_street"
+    android:drawableTop="@drawable/ic_parking"
     android:padding="2dp"
     android:textAlignment="center"
     android:textColor="#FFF"

@@ -14,7 +14,13 @@ import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.google.maps.android.ui.IconGenerator;
 
+import java.util.Locale;
+
 import uk.ac.aston.wadekabs.smartcarparkapplication.model.CarPark;
+
+import static com.google.maps.android.ui.IconGenerator.STYLE_BLUE;
+import static com.google.maps.android.ui.IconGenerator.STYLE_GREEN;
+import static com.google.maps.android.ui.IconGenerator.STYLE_ORANGE;
 
 /**
  * Created by Bhalchandra Wadekar on 06/02/2017.
@@ -25,64 +31,12 @@ class CarParkRenderer extends DefaultClusterRenderer<CarPark> {
     private final IconGenerator mIconGenerator;
     private Context mContext;
 
-    private static final int STYLE_LOW = 8;
-    private static final int STYLE_MODERATE = 9;
-    private static final int STYLE_HIGH = 10;
-
     CarParkRenderer(Context context, GoogleMap map, ClusterManager<CarPark> clusterManager) {
 
         super(context, map, clusterManager);
 
         mContext = context;
-
-        mIconGenerator = new IconGenerator(context) {
-
-            @Override
-            public void setStyle(int style) {
-
-                super.setStyle(STYLE_BLUE);
-
-                int colour = Color.BLUE;
-
-                int red = Color.red(colour);
-                int green = Color.green(colour);
-                int blue = Color.blue(colour);
-
-                if (style >= 8) {
-
-                    red = Math.round(Math.max(0, red - 255 / 4));
-                    green = Math.round(Math.max(0, green - 255 / 4));
-                    blue = Math.round(Math.max(0, blue - 255 / 4));
-                }
-
-                if (style >= 9) {
-                    red = Math.round(Math.max(0, red - 255 / 4));
-                    green = Math.round(Math.max(0, green - 255 / 4));
-                    blue = Math.round(Math.max(0, blue - 255 / 4));
-                }
-
-                if (style >= 10) {
-                    red = Math.round(Math.max(0, red - 255 / 4));
-                    green = Math.round(Math.max(0, green - 255 / 4));
-                    blue = Math.round(Math.max(0, blue - 255 / 4));
-                }
-
-                this.setColor(Color.rgb(red, green, blue));
-
-                switch (style) {
-                    case 8:
-                        super.setStyle(STYLE_ORANGE);
-                        break;
-                    case 9:
-                        super.setStyle(STYLE_BLUE);
-                        break;
-                    case 10:
-                        super.setStyle(STYLE_GREEN);
-                        break;
-
-                }
-            }
-        };
+        mIconGenerator = new IconGenerator(mContext);
     }
 
     @Override
@@ -99,6 +53,7 @@ class CarParkRenderer extends DefaultClusterRenderer<CarPark> {
 
     @Override
     protected void onBeforeClusterItemRendered(CarPark carPark, MarkerOptions markerOptions) {
+
         super.onBeforeClusterItemRendered(carPark, markerOptions);
 
         int free = carPark.getCapacity() - carPark.getOccupancy();
@@ -108,7 +63,7 @@ class CarParkRenderer extends DefaultClusterRenderer<CarPark> {
         View view = LayoutInflater.from(mContext).inflate(R.layout.marker, null);
 
         TextView price = (TextView) view.findViewById(R.id.price);
-        price.setText(Integer.toString(free));
+        price.setText(String.format(Locale.ENGLISH, "%d", free));
 
         mIconGenerator.setContentView(view);
 
@@ -117,43 +72,26 @@ class CarParkRenderer extends DefaultClusterRenderer<CarPark> {
 
     @Override
     protected int getColor(int clusterSize) {
+
         super.getColor(clusterSize);
 
-        int colour = Color.BLUE;
+        if (clusterSize < 423)
+            return Color.RED;
 
-        int red = Color.red(colour);
-        int green = Color.green(colour);
-        int blue = Color.blue(colour);
+        if (clusterSize < 846)
+            return Color.BLUE;
 
-        if (clusterSize > 423) {
-            red = Math.round(Math.max(0, red - 255 / 3));
-            green = Math.round(Math.max(0, green - 255 / 3));
-            blue = Math.round(Math.max(0, blue - 255 / 3));
-        }
-
-        if (clusterSize > 846) {
-            red = Math.round(Math.max(0, red - 255 / 3));
-            green = Math.round(Math.max(0, green - 255 / 3));
-            blue = Math.round(Math.max(0, blue - 255 / 3));
-        }
-
-        if (clusterSize > 1269) {
-            red = Math.round(Math.max(0, red - 255 / 3));
-            green = Math.round(Math.max(0, green - 255 / 3));
-            blue = Math.round(Math.max(0, blue - 255 / 3));
-        }
-
-        return Color.rgb(red, green, blue);
+        return Color.GREEN;
     }
 
     private int getStyle(int free) {
 
         if (free < 423)
-            return STYLE_LOW;
+            return STYLE_ORANGE;
 
         if (free < 846)
-            return STYLE_MODERATE;
+            return STYLE_BLUE;
 
-        return STYLE_HIGH;
+        return STYLE_GREEN;
     }
 }

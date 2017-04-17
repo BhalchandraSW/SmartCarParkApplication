@@ -31,7 +31,6 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.ErrorCodes;
 import com.firebase.ui.auth.IdpResponse;
 import com.firebase.ui.auth.ResultCodes;
@@ -57,6 +56,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.UiSettings;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.database.DataSnapshot;
@@ -69,7 +69,6 @@ import com.google.maps.android.ui.IconGenerator;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -125,19 +124,19 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+        final SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
         buildGoogleApiClient();
 
-        startActivityForResult(
-                AuthUI.getInstance()
-                        .createSignInIntentBuilder()
-                        .setProviders(Collections.singletonList(
-                                new AuthUI.IdpConfig.Builder(AuthUI.GOOGLE_PROVIDER).build()))
-                        .build(),
-                RC_SIGN_IN);
+//        startActivityForResult(
+//                AuthUI.getInstance()
+//                        .createSignInIntentBuilder()
+//                        .setProviders(Collections.singletonList(
+//                                new AuthUI.IdpConfig.Builder(AuthUI.GOOGLE_PROVIDER).build()))
+//                        .build(),
+//                RC_SIGN_IN);
 
         mAdapter = new CarParkListAdapter(mCarParkList);
         mRecyclerView = (RecyclerView) findViewById(R.id.car_park_list);
@@ -148,6 +147,44 @@ public class MainActivity extends AppCompatActivity
 
         DividerItemDecoration decoration = new DividerItemDecoration(mRecyclerView.getContext(), LinearLayout.VERTICAL);
         mRecyclerView.addItemDecoration(decoration);
+
+        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+
+                int i = recyclerView.computeVerticalScrollOffset() /
+                        (recyclerView.computeVerticalScrollRange() / recyclerView.getAdapter().getItemCount());
+
+                LatLngBounds bounds = LatLngBounds.builder()
+                        .include(mCarParkList.get(i).getPosition())
+                        .build();
+
+                if (i + 1 < mCarParkList.size())
+                    bounds = bounds.including(mCarParkList.get(i + 1).getPosition());
+
+                if (i + 2 < mCarParkList.size())
+                    bounds = bounds.including(mCarParkList.get(i + 2).getPosition());
+
+                Collection<Marker> markers = mClusterManager.getMarkerCollection().getMarkers();
+
+                for (Marker marker : markers) {
+                    if (marker.getPosition().equals(mCarParkList.get(i).getPosition())
+                            || marker.getPosition().equals(mCarParkList.get(i + 1).getPosition())
+                            || marker.getPosition().equals(mCarParkList.get(i + 2).getPosition())) {
+                        marker.setAlpha(1.0f);
+                        marker.setZIndex(1.0f);
+                        marker.showInfoWindow();
+                    } else {
+                        marker.setAlpha(0.5f);
+                        marker.setZIndex(0.0f);
+                        marker.hideInfoWindow();
+                    }
+                }
+
+                mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 200));
+            }
+        });
     }
 
     protected synchronized void buildGoogleApiClient() {
@@ -294,7 +331,7 @@ public class MainActivity extends AppCompatActivity
 
                     for (DataSnapshot carParkSnapshot : carParksSnapshot.getChildren()) {
 
-                        CarPark carPark = carParkSnapshot.getValue(CarPark.class);
+                        final CarPark carPark = carParkSnapshot.getValue(CarPark.class);
                         Integer keyOfCarPark = Integer.valueOf(carParkSnapshot.getKey());
                         carParkMap.put(keyOfCarPark - 1, carPark);
 
@@ -304,13 +341,19 @@ public class MainActivity extends AppCompatActivity
                             @Override
                             public void onDataChange(DataSnapshot carParkLiveSnapshot) {
                                 Integer keyOfCarParkLive = Integer.valueOf(carParkLiveSnapshot.getKey());
-                                CarPark carPark1 = carParkMap.get(keyOfCarParkLive - 1);
-                                carPark1.updateLiveData(carParkLiveSnapshot.getValue(CarPark.class));
-                                if (mCarParkList.contains(carPark1)) {
-                                    mCarParkList.remove(carPark1);
+                                CarPark carPark = carParkMap.get(keyOfCarParkLive - 1);
+                                carPark.updateLiveData(carParkLiveSnapshot.getValue(CarPark.class));
+
+                                if ("Faulty".equals(carPark.getOccupancyTrend())) {
+                                    mCarParkList.remove(carPark);
+                                } else {
+
+                                    if (mCarParkList.contains(carPark)) {
+                                        mCarParkList.remove(carPark);
+                                    }
+                                    mCarParkList.add(carPark);
+                                    mAdapter.notifyDataSetChanged();
                                 }
-                                mCarParkList.add(carPark1);
-                                mAdapter.notifyDataSetChanged();
                             }
 
                             @Override
