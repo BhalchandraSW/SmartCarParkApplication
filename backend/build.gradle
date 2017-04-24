@@ -23,14 +23,11 @@ targetCompatibility = JavaVersion.VERSION_1_7
 
 dependencies {
     appengineSdk 'com.google.appengine:appengine-java-sdk:1.9.51'
-    compile 'com.google.appengine:appengine-api-1.0-sdk:1.9.51'
     compile 'com.google.appengine:appengine-endpoints:1.9.51'
     compile 'com.google.appengine:appengine-endpoints-deps:1.9.51'
-    compile 'com.google.firebase:firebase-server-sdk:3.0.3'
     compile 'com.google.maps:google-maps-services:0.1.20'
     compile 'com.opencsv:opencsv:3.9'
     compile 'javax.servlet:servlet-api:2.5'
-    compile 'org.apache.httpcomponents:httpclient:4.5.3'
 }
 
 appengine {

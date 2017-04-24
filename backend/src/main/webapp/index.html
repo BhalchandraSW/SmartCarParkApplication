@@ -57,7 +57,7 @@
                     <div class="input-group">
                         <input type="text" class="form-control input-lg" placeholder="Name"
                                id="nameInput"/>
-                          <span class="input-group-btn">
+                        <span class="input-group-btn">
                              <button class="btn btn-default btn-primary btn-group btn-lg"
                                      type="submit" id="helloButton">Say "Hello" &raquo;</button>
                           </span>
@@ -90,7 +90,7 @@
     function enableClick() {
       document.getElementById('helloButton').onclick = function() {
         var name = document.getElementById('nameInput').value;
-        gapi.client.myApi.sayHi({'name': name}).execute(
+        gapi.client.carParkApi.sayHi({'name': name}).execute(
           function(response) {
             var outputAlertDiv = document.getElementById('outputAlert');
             outputAlertDiv.style.visibility = 'visible';
@@ -110,7 +110,7 @@
     }
     // This is called initially
     function init() {
-      var apiName = 'myApi';
+      var apiName = 'carParkApi';
       var apiVersion = 'v1';
       var apiRoot = 'https://' + window.location.host + '/_ah/api';
       if (window.location.hostname == 'localhost'
@@ -124,6 +124,7 @@
       }
       gapi.client.load(apiName, apiVersion, callback, apiRoot);
     }
+
 
 </script>
 <!--
