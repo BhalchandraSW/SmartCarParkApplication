@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "smart-car-park-application",
+  "private_key_id": "67d5b356553bb6e116977c8b2c8063b225d7cb73",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDHlJ4ooMX0cKuB\nbQq3F0tSu7guLBNLNyHfYaLiFEZE9VHTxDb8pgzBn9tmZpuYChdV9cLDI067uPGm\nNZZenBTLDNlFQxkIKxNbQ0UWtIVNy9A3RG9QhqoO1c7Z2c0XRhreIwcV2XXkcKb2\nNP7Zak4KVDSaNjF46UEg6Shc3Ik7AlFYWtQjBQYfoBm1j+f21EAoT1mUxJ0F0U1p\n4jtLupe/Itjm1NXC987G4TOHjeavIZ3p3mMX+xvcHRYxq93+nxse26KRG2QKUE7i\nF2P2KUfbYslJYYW3RS+F9DNhAGYcuGJn97mZjqxEJ0g6dMHoleI6g1598z+lQBmA\nYdPI4smLAgMBAAECggEBALp9HoQsJozQMxHPCDIpLBL0oZdTS/v+WkJXA1JpS3fo\nGzvbnt3ZcxYB/4rh2gXpeAC0kfaxKUKz/+klLYreIXfSW7sihWNijMW8R/R9Xgph\npf/ejH0cOA+ArbZWlBNpSHXFGTvLZSO+N+TbhD833BA+uqBWf0fR/S95bmPHFtvx\nGPTh0bsNSdIbhSk427wjGn9UEKg+kPCyT/1Acb/42lug1yFpFrjgeCvVOpGj1jBx\nD2aRwVNmdRx4UObEXtYDHaZDo0fgeRUkWgpELalz9ZCYZf8RL/wUqJTkXjbf5Ixm\njYuM/TyVhefk6W42q22zxVdiIKrnCZUnMSqsEkbXu3ECgYEA8wO8WQt8j884nwq8\nBIUs7TcVLOcTZJeywxpD2wQxludhFNd3VnSGSv/nM5Wz1uJ7+3U5Sr2fsbGXfI++\nBXCP44B5p6GzWW27zmhjR8Mz+SZ33lDyIFZxW/KsYzue2wxnkVoNGVnBTAhMDsbj\nCqylwEiZyh7xXdQyHHBk8VY0yUcCgYEA0j68TSMgELdFKTrTd2a49nHZB7sQgPaf\nBsnrP+m3Qyio2PG97jI2WWUdm1ogU6eYUQOxmFGhGZsPmR41FxNW6agXtoMigkPV\nE25U+QBkwMEdwe3t0u7iK733hyAyZiH8YYMf5/yi98BFiPu1QlThttRkgAqqJEA7\nzfMlbBaeX50CgYBLUlgZnWbRSCA7o18dY43GRLFqhoDLR/2fXU+03brlE/hSNmqF\nwH4zVtf5dCgWrYJSMUY9tUJ/GBVlBUSXeQkQMa0DWSo2yL1SP6auAoHkcpjqrlot\nzb07C5+E7mDRcinTsn6m4dv4zgWM+vY6Q8LoM1h/flG/jFqv1+Jhrx+TVwKBgQC3\n2kCUO+kodPu36EdQHLYWXMxrJDx0ajX6m8xq4Zhu1DmDLTLn/2Tjm7beSVwHi4F5\nJv/AsXFtkNl9DptiiHjybxn9coNU4riL+2m3LY7tuHKrScM1N8z0b3Tr503rXkDz\njNTz60sf2DV2apbBYLTZSrZv+eN7O+iQWtYYxVbNSQKBgQC4ELGxNNUcQcdWEXPw\nK7dmn2F82P/cDpZoIVoi7a62vE/dBz3vALlfSh6i0oCXugFP7tWRByuG6elC5+7V\nQ+auRoCS1974onD2IrGE8ZiGAc7hBpK9aJepmNTvJRbi0ghyw8euyqyFafX++COA\nzPpcvrWCj2q9yzTF3DWUzS47Lg==\n-----END PRIVATE KEY-----\n",
+  "client_email": "smartcarparkapplication-servle@smart-car-park-application.iam.gserviceaccount.com",
+  "client_id": "110134840672009211512",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://accounts.google.com/o/oauth2/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/smartcarparkapplication-servle%40smart-car-park-application.iam.gserviceaccount.com"
+}

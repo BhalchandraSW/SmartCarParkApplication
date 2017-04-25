@@ -1,13 +1,11 @@
 package uk.ac.aston.wadekabs.smartcarparkapplication;
 
 import android.Manifest;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -15,7 +13,6 @@ import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.util.Pair;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -75,6 +72,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import uk.ac.aston.wadekabs.smartcarparkapplication.model.CarPark;
 
@@ -188,8 +186,6 @@ public class MainActivity extends AppCompatActivity
                 mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 200));
             }
         });
-
-        AsyncTask<Pair<Context, String>, Void, String> manfred = new CarParkEndpointAsyncTask().execute(new Pair<Context, String>(this, "Manfred"));
     }
 
     protected synchronized void buildGoogleApiClient() {
@@ -328,6 +324,24 @@ public class MainActivity extends AppCompatActivity
             }
 
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(mDestination, 15.0f));
+
+            try {
+
+                List<uk.ac.aston.wadekabs.smartcarparkapplication.backend.carParkApi.model.CarPark>
+                        carParkList = new CarParkEndpointAsyncTask()
+                        .execute(mDestination)
+                        .get();
+
+                if (carParkList != null) {
+                    for (uk.ac.aston.wadekabs.smartcarparkapplication.backend.carParkApi.model.CarPark carPark : carParkList) {
+                        System.out.println(carPark);
+                    }
+                } else {
+                    System.out.println("car parks is null");
+                }
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+            }
 
             DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference("carParks");
             mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {

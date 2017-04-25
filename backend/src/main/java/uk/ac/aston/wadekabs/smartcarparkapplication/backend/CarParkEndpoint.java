@@ -16,14 +16,21 @@ import com.google.maps.model.AddressType;
 import com.google.maps.model.GeocodingResult;
 import com.google.maps.model.LatLng;
 import com.google.maps.model.PlacesSearchResponse;
-import com.google.maps.model.PlacesSearchResult;
+
+import net.sf.jsefa.Deserializer;
+import net.sf.jsefa.common.lowlevel.filter.HeaderAndFooterFilter;
+import net.sf.jsefa.csv.CsvIOFactory;
+import net.sf.jsefa.csv.config.CsvConfiguration;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Named;
 
+import uk.ac.aston.wadekabs.smartcarparkapplication.backend.model.BirminghamDataFactoryCarPark;
 import uk.ac.aston.wadekabs.smartcarparkapplication.backend.model.CarPark;
 
 /**
@@ -59,7 +66,7 @@ public class CarParkEndpoint {
 
                 for (AddressComponentType type : component.types) {
                     if (AddressComponentType.POSTAL_TOWN.equals(type)) {
-                        System.out.println(component);
+                        System.out.println(component.shortName);
                     }
                 }
             }
@@ -68,11 +75,12 @@ public class CarParkEndpoint {
         /*
           Google Places API
          */
-        NearbySearchRequest nearbySearchRequest = PlacesApi.nearbySearchQuery(sContext, new LatLng(latitude, longitude));
+        NearbySearchRequest nearbySearchRequest = PlacesApi.nearbySearchQuery(sContext, center);
+        nearbySearchRequest.radius(50000);
         PlacesSearchResponse response = nearbySearchRequest.await();
-        for (PlacesSearchResult result : response.results) {
-            carParkList.add(new CarPark());
-        }
+//        for (PlacesSearchResult result : response.results) {
+//            carParkList.add(new CarPark());
+//        }
 
         /*
           Transport for Greater Manchester API
@@ -81,6 +89,24 @@ public class CarParkEndpoint {
         /*
           Birmingham Data Factory API
          */
+        URL url = new URL("https://data.birmingham.gov.uk" +
+                "/dataset/53888bc3-6745-4454-8f03-3575668232fd" +
+                "/resource/bea04cd0-ea86-4d7e-ab3b-2da3368d1e01/download/parking.csv");
+
+        CsvConfiguration config = new CsvConfiguration();
+        config.setFieldDelimiter(',');
+        config.setLineFilter(new HeaderAndFooterFilter(1, false, false));
+        Deserializer deserializer =
+                CsvIOFactory.createFactory(config, BirminghamDataFactoryCarPark.class)
+                        .createDeserializer();
+
+        deserializer.open(new InputStreamReader(url.openStream()));
+        while (deserializer.hasNext()) {
+            BirminghamDataFactoryCarPark birminghamDataFactoryCarPark = deserializer.next();
+            CarPark carPark = new CarPark(birminghamDataFactoryCarPark);
+            carParkList.add(carPark);
+        }
+        deserializer.close(true);
 
         /*
           ParkRight API

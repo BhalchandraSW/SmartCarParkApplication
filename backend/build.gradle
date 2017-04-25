@@ -28,6 +28,7 @@ dependencies {
     compile 'com.google.maps:google-maps-services:0.1.20'
     compile 'com.opencsv:opencsv:3.9'
     compile 'javax.servlet:servlet-api:2.5'
+    compile 'net.sf.jsefa:jsefa:1.1.1.RELEASE'
 }
 
 appengine {
