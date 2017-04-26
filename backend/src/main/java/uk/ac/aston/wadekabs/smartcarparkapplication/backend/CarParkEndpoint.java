@@ -50,6 +50,8 @@ public class CarParkEndpoint {
     private static String API_KEY = "AIzaSyA_AV3itrHOwfbPtS8ySQGe3L54883BWI8";
     private static GeoApiContext sContext = new GeoApiContext(new GaeRequestHandler()).setApiKey(API_KEY);
 
+    private String city;
+
     @ApiMethod(name = "nearby")
     public List<CarPark> nearby(@Named("latitude") double latitude, @Named("longitude") double longitude) throws InterruptedException, ApiException, IOException {
 
@@ -61,12 +63,13 @@ public class CarParkEndpoint {
         request.resultType(AddressType.POSTAL_TOWN);
         GeocodingResult[] results = request.await();
 
+        outer:
         for (GeocodingResult result : results) {
             for (AddressComponent component : result.addressComponents) {
-
                 for (AddressComponentType type : component.types) {
                     if (AddressComponentType.POSTAL_TOWN.equals(type)) {
-                        System.out.println(component.shortName);
+                        city = component.shortName;
+                        break outer;
                     }
                 }
             }

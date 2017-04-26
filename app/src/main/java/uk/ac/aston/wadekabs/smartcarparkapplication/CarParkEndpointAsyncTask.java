@@ -25,6 +25,7 @@ class CarParkEndpointAsyncTask extends AsyncTask<LatLng, Void, List<CarPark>> {
                     new AndroidJsonFactory(),
                     null)
                     .setRootUrl("https://smart-car-park-application.appspot.com/_ah/api/");
+//                    .setRootUrl("http://localhost:8080/_ah/api/")
 //                    .setGoogleClientRequestInitializer(new GoogleClientRequestInitializer() {
 //                        @Override
 //                        public void initialize(AbstractGoogleClientRequest<?> request) throws IOException {
@@ -38,9 +39,8 @@ class CarParkEndpointAsyncTask extends AsyncTask<LatLng, Void, List<CarPark>> {
 
         try {
             return service.nearby(location.latitude, location.longitude).execute().getItems();
-        } catch (IOException ignored) {
-            System.out.println("ignored.print");
-            ignored.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
         return null;
