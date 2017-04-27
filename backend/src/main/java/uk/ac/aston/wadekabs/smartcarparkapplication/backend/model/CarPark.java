@@ -1,5 +1,7 @@
 package uk.ac.aston.wadekabs.smartcarparkapplication.backend.model;
 
+import uk.ac.aston.wadekabs.smartcarparkapplication.backend.model.parkright.ParkRightCarPark;
+
 public class CarPark {
 
     private String systemCodeNumber;
@@ -9,6 +11,9 @@ public class CarPark {
 
     public CarPark(BirminghamDataFactoryCarPark birminghamDataFactoryCarPark) {
         systemCodeNumber = birminghamDataFactoryCarPark.getSystemCodeNumber();
+    }
+
+    public CarPark(ParkRightCarPark parkRightCarPark) {
     }
 
     public String getSystemCodeNumber() {
