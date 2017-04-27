@@ -1,4 +1,4 @@
-package uk.ac.aston.wadekabs.smartcarparkapplication.backend.model;
+package uk.ac.aston.wadekabs.smartcarparkapplication.backend.model.birminghamdatafactory;
 
 import net.sf.jsefa.csv.annotation.CsvDataType;
 import net.sf.jsefa.csv.annotation.CsvField;

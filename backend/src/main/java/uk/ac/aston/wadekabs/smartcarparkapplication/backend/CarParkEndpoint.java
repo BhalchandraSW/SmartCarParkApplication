@@ -28,7 +28,7 @@ import java.util.List;
 
 import javax.inject.Named;
 
-import uk.ac.aston.wadekabs.smartcarparkapplication.backend.model.BirminghamDataFactoryCarPark;
+import uk.ac.aston.wadekabs.smartcarparkapplication.backend.model.birminghamdatafactory.BirminghamDataFactoryCarPark;
 import uk.ac.aston.wadekabs.smartcarparkapplication.backend.model.CarPark;
 import uk.ac.aston.wadekabs.smartcarparkapplication.backend.model.parkright.ParkRightCarPark;
 
