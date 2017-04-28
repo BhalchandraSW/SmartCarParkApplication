@@ -31,9 +31,6 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.firebase.ui.auth.ErrorCodes;
-import com.firebase.ui.auth.IdpResponse;
-import com.firebase.ui.auth.ResultCodes;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
@@ -130,14 +127,6 @@ public class MainActivity extends AppCompatActivity
         mapFragment.getMapAsync(this);
 
         buildGoogleApiClient();
-
-//        startActivityForResult(
-//                AuthUI.getInstance()
-//                        .createSignInIntentBuilder()
-//                        .setProviders(Collections.singletonList(
-//                                new AuthUI.IdpConfig.Builder(AuthUI.GOOGLE_PROVIDER).build()))
-//                        .build(),
-//                RC_SIGN_IN);
 
         mAdapter = new CarParkListAdapter(mCarParkList);
         mRecyclerView = (RecyclerView) findViewById(R.id.car_park_list);
@@ -589,42 +578,6 @@ public class MainActivity extends AppCompatActivity
                 } else if (resultCode == RESULT_CANCELED) {
                     // The user canceled the operation.
                 }
-                break;
-
-            case RC_SIGN_IN:
-
-                IdpResponse response = IdpResponse.fromResultIntent(data);
-
-                // Successfully signed in
-                if (resultCode == ResultCodes.OK) {
-//                    startActivity(new Intent(MainActivity.this, response));
-//                    finish();
-                    return;
-                } else {
-
-                    // Sign in failed
-                    if (response == null) {
-                        // User pressed back button
-                        // showSnackbar(R.string.sign_in_cancelled);
-                        return;
-                    }
-
-                    if (response.getErrorCode() == ErrorCodes.NO_NETWORK) {
-
-                        System.out.println("Authentication:\tNo network connection");
-
-                        // showSnackbar(R.string.no_internet_connection);
-                        return;
-                    }
-
-                    if (response.getErrorCode() == ErrorCodes.UNKNOWN_ERROR) {
-                        // showSnackbar(R.string.unknown_error);
-                        return;
-                    }
-                }
-
-                // showSnackbar(R.string.unknown_sign_in_response);
-
                 break;
         }
     }
