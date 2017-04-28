@@ -16,7 +16,7 @@ import com.google.maps.android.ui.IconGenerator;
 
 import java.util.Locale;
 
-import uk.ac.aston.wadekabs.smartcarparkapplication.model.CarPark;
+import uk.ac.aston.wadekabs.smartcarparkapplication.model.CarParkItem;
 
 import static com.google.maps.android.ui.IconGenerator.STYLE_BLUE;
 import static com.google.maps.android.ui.IconGenerator.STYLE_GREEN;
@@ -26,12 +26,12 @@ import static com.google.maps.android.ui.IconGenerator.STYLE_ORANGE;
  * Created by Bhalchandra Wadekar on 06/02/2017.
  */
 
-class CarParkRenderer extends DefaultClusterRenderer<CarPark> {
+class CarParkRenderer extends DefaultClusterRenderer<CarParkItem> {
 
     private final IconGenerator mIconGenerator;
     private Context mContext;
 
-    CarParkRenderer(Context context, GoogleMap map, ClusterManager<CarPark> clusterManager) {
+    CarParkRenderer(Context context, GoogleMap map, ClusterManager<CarParkItem> clusterManager) {
 
         super(context, map, clusterManager);
 
@@ -40,23 +40,23 @@ class CarParkRenderer extends DefaultClusterRenderer<CarPark> {
     }
 
     @Override
-    protected int getBucket(Cluster<CarPark> cluster) {
+    protected int getBucket(Cluster<CarParkItem> cluster) {
 
         int bucket = 0;
 
-        for (CarPark carPark : cluster.getItems()) {
-            bucket += (carPark.getCapacity() - carPark.getOccupancy());
+        for (CarParkItem carParkItem : cluster.getItems()) {
+            bucket += carParkItem.getCarPark().getFree();
         }
 
         return bucket / cluster.getSize();
     }
 
     @Override
-    protected void onBeforeClusterItemRendered(CarPark carPark, MarkerOptions markerOptions) {
+    protected void onBeforeClusterItemRendered(CarParkItem carParkItem, MarkerOptions markerOptions) {
 
-        super.onBeforeClusterItemRendered(carPark, markerOptions);
+        super.onBeforeClusterItemRendered(carParkItem, markerOptions);
 
-        int free = carPark.getCapacity() - carPark.getOccupancy();
+        int free = carParkItem.getCarPark().getFree();
 
         mIconGenerator.setStyle(getStyle(free));
 

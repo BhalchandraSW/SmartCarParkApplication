@@ -30,6 +30,7 @@ dependencies {
     compile 'net.sf.jsefa:jsefa:1.1.1.RELEASE'
     compile 'org.apache.olingo:olingo-odata2-core:2.0.8'
     compile 'org.apache.olingo:olingo-odata2-api:2.0.8'
+    compile 'org.json:json:20160810'
 }
 
 appengine {

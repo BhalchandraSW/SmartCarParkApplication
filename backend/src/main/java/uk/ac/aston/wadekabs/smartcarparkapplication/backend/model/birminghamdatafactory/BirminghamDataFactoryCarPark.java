@@ -34,13 +34,13 @@ public class BirminghamDataFactoryCarPark {
     private String fault;
 
     @CsvField(pos = 9)
-    private BigDecimal occupancy;
+    private int occupancy;
 
     @CsvField(pos = 10)
     private String occupancyTrend;
 
     @CsvField(pos = 11)
-    private BigDecimal occupancePercentage;
+    private BigDecimal occupancyPercentage;
 
     @CsvField(pos = 12)
     private BigDecimal fillRate;
@@ -121,11 +121,11 @@ public class BirminghamDataFactoryCarPark {
         this.fault = fault;
     }
 
-    public BigDecimal getOccupancy() {
+    public int getOccupancy() {
         return occupancy;
     }
 
-    public void setOccupancy(BigDecimal occupancy) {
+    public void setOccupancy(int occupancy) {
         this.occupancy = occupancy;
     }
 
@@ -137,12 +137,12 @@ public class BirminghamDataFactoryCarPark {
         this.occupancyTrend = occupancyTrend;
     }
 
-    public BigDecimal getOccupancePercentage() {
-        return occupancePercentage;
+    public BigDecimal getOccupancyPercentage() {
+        return occupancyPercentage;
     }
 
-    public void setOccupancePercentage(BigDecimal occupancePercentage) {
-        this.occupancePercentage = occupancePercentage;
+    public void setOccupancyPercentage(BigDecimal occupancyPercentage) {
+        this.occupancyPercentage = occupancyPercentage;
     }
 
     public BigDecimal getFillRate() {

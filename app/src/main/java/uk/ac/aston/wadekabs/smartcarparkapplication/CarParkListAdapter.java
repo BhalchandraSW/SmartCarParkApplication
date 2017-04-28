@@ -8,10 +8,10 @@ import android.widget.TextView;
 
 import java.util.List;
 
-import uk.ac.aston.wadekabs.smartcarparkapplication.model.CarPark;
+import uk.ac.aston.wadekabs.smartcarparkapplication.backend.carParkApi.model.CarPark;
 
 /**
- * Recycler.Adapter for holding car parks.
+ * RecyclerView Adapter for holding car parks.
  */
 
 class CarParkListAdapter extends RecyclerView.Adapter<CarParkListAdapter.CarParkViewHolder> {
@@ -32,8 +32,8 @@ class CarParkListAdapter extends RecyclerView.Adapter<CarParkListAdapter.CarPark
     @Override
     public void onBindViewHolder(CarParkViewHolder holder, int position) {
         CarPark carPark = mCarParkList.get(position);
-        holder.mName.setText(carPark.getTitle());
-        holder.mOccupancyTrend.setText(carPark.getOccupancyTrend());
+        holder.mName.setText(carPark.getDescription());
+        holder.mOccupancyTrend.setText(carPark.getTrend());
     }
 
     @Override
@@ -51,17 +51,6 @@ class CarParkListAdapter extends RecyclerView.Adapter<CarParkListAdapter.CarPark
 
             mName = (TextView) itemView.findViewById(R.id.name);
             mOccupancyTrend = (TextView) itemView.findViewById(R.id.occupancy_trend);
-
-            itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-
-                    int position = getAdapterPosition();
-
-                    CarPark carPark = mCarParkList.get(position);
-                    System.out.println(carPark);
-                }
-            });
         }
     }
 }

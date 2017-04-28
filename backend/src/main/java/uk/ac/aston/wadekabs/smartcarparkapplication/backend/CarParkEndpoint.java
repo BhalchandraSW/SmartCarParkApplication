@@ -116,8 +116,10 @@ public class CarParkEndpoint {
 
         while (deserializer.hasNext()) {
             BirminghamDataFactoryCarPark birminghamDataFactoryCarPark = deserializer.next();
-            CarPark carPark = new CarPark(birminghamDataFactoryCarPark);
-            carParkList.add(carPark);
+            if (!"Faulty".equals(birminghamDataFactoryCarPark.getOccupancyTrend())) {
+                CarPark carPark = new CarPark(birminghamDataFactoryCarPark);
+                carParkList.add(carPark);
+            }
         }
 
         deserializer.close(true);

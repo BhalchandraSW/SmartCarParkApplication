@@ -57,12 +57,11 @@ import com.google.maps.android.ui.IconGenerator;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-import uk.ac.aston.wadekabs.smartcarparkapplication.model.CarPark;
+import uk.ac.aston.wadekabs.smartcarparkapplication.backend.carParkApi.model.CarPark;
+import uk.ac.aston.wadekabs.smartcarparkapplication.model.CarParkItem;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback,
@@ -80,15 +79,9 @@ public class MainActivity extends AppCompatActivity
     private LatLng mDestination;
     private Marker mDestinationMarker;
 
-    /**
-     * Map of car parks
-     * key is primary key of car park
-     * value is car park object
-     */
-    private Map<Integer, CarPark> carParkMap = new LinkedHashMap<>();
     private List<CarPark> mCarParkList = new ArrayList<>();
 
-    private ClusterManager<CarPark> mClusterManager;
+    private ClusterManager<CarParkItem> mClusterManager;
 
     private RecyclerView mRecyclerView;
     private CarParkListAdapter mAdapter;
@@ -125,7 +118,8 @@ public class MainActivity extends AppCompatActivity
         SnapHelper helper = new PagerSnapHelper();
         helper.attachToRecyclerView(mRecyclerView);
 
-        DividerItemDecoration decoration = new DividerItemDecoration(mRecyclerView.getContext(), LinearLayout.VERTICAL);
+        DividerItemDecoration decoration = new DividerItemDecoration(mRecyclerView.getContext(),
+                LinearLayout.VERTICAL);
         mRecyclerView.addItemDecoration(decoration);
 
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -135,24 +129,40 @@ public class MainActivity extends AppCompatActivity
                 super.onScrolled(recyclerView, dx, dy);
 
                 int i = recyclerView.computeVerticalScrollOffset() /
-                        (recyclerView.computeVerticalScrollRange() / recyclerView.getAdapter().getItemCount());
+                        (recyclerView.computeVerticalScrollRange() /
+                                recyclerView.getAdapter().getItemCount());
+
+                double latitude = mCarParkList.get(i).getLatitude();
+                double longitude = mCarParkList.get(i).getLongitude();
+
+                LatLng position0 = new LatLng(latitude, longitude);
 
                 LatLngBounds bounds = LatLngBounds.builder()
-                        .include(mCarParkList.get(i).getPosition())
+                        .include(position0)
                         .build();
 
+                latitude = mCarParkList.get(i + 1).getLatitude();
+                longitude = mCarParkList.get(i + 1).getLongitude();
+
+                LatLng position1 = new LatLng(latitude, longitude);
+
                 if (i + 1 < mCarParkList.size())
-                    bounds = bounds.including(mCarParkList.get(i + 1).getPosition());
+                    bounds = bounds.including(position1);
+
+                latitude = mCarParkList.get(i + 2).getLatitude();
+                longitude = mCarParkList.get(i + 2).getLongitude();
+
+                LatLng position2 = new LatLng(latitude, longitude);
 
                 if (i + 2 < mCarParkList.size())
-                    bounds = bounds.including(mCarParkList.get(i + 2).getPosition());
+                    bounds = bounds.including(position2);
 
                 Collection<Marker> markers = mClusterManager.getMarkerCollection().getMarkers();
 
                 for (Marker marker : markers) {
-                    if (marker.getPosition().equals(mCarParkList.get(i).getPosition())
-                            || marker.getPosition().equals(mCarParkList.get(i + 1).getPosition())
-                            || marker.getPosition().equals(mCarParkList.get(i + 2).getPosition())) {
+                    if (marker.getPosition().equals(position0)
+                            || marker.getPosition().equals(position1)
+                            || marker.getPosition().equals(position2)) {
                         marker.setAlpha(1.0f);
                         marker.setZIndex(1.0f);
                         marker.showInfoWindow();
@@ -307,66 +317,14 @@ public class MainActivity extends AppCompatActivity
 
             try {
 
-                List<uk.ac.aston.wadekabs.smartcarparkapplication.backend.carParkApi.model.CarPark>
-                        carParkList = new CarParkEndpointAsyncTask()
+                mCarParkList.addAll(new CarParkEndpointAsyncTask()
                         .execute(mDestination)
-                        .get();
+                        .get());
+                mAdapter.notifyDataSetChanged();
 
-                if (carParkList != null) {
-                    for (uk.ac.aston.wadekabs.smartcarparkapplication.backend.carParkApi.model.CarPark carPark : carParkList) {
-                        System.out.println(carPark);
-                    }
-                } else {
-                    System.out.println("car parks is null");
-                }
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
             }
-
-//            DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference("carParks");
-//            mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
-//                @Override
-//                public void onDataChange(DataSnapshot carParksSnapshot) {
-//
-//                    for (DataSnapshot carParkSnapshot : carParksSnapshot.getChildren()) {
-//
-//                        final CarPark carPark = carParkSnapshot.getValue(CarPark.class);
-//                        Integer keyOfCarPark = Integer.valueOf(carParkSnapshot.getKey());
-//                        carParkMap.put(keyOfCarPark - 1, carPark);
-//
-//                        DatabaseReference carParkLiveReference = FirebaseDatabase.getInstance().getReference("carParksLive");
-//                        carParkLiveReference.child(String.valueOf(keyOfCarPark)).addListenerForSingleValueEvent(new ValueEventListener() {
-//
-//                            @Override
-//                            public void onDataChange(DataSnapshot carParkLiveSnapshot) {
-//                                Integer keyOfCarParkLive = Integer.valueOf(carParkLiveSnapshot.getKey());
-//                                CarPark carPark = carParkMap.get(keyOfCarParkLive - 1);
-//                                carPark.updateLiveData(carParkLiveSnapshot.getValue(CarPark.class));
-//
-//                                if ("Faulty".equals(carPark.getOccupancyTrend())) {
-//                                    mCarParkList.remove(carPark);
-//                                } else {
-//
-//                                    if (mCarParkList.contains(carPark)) {
-//                                        mCarParkList.remove(carPark);
-//                                    }
-//                                    mCarParkList.add(carPark);
-//                                    mAdapter.notifyDataSetChanged();
-//                                }
-//                            }
-//
-//                            @Override
-//                            public void onCancelled(DatabaseError databaseError) {
-//                            }
-//                        });
-//                    }
-//
-//                }
-//
-//                @Override
-//                public void onCancelled(DatabaseError databaseError) {
-//                }
-//            });
 
             addMarkers();
         }
@@ -401,8 +359,8 @@ public class MainActivity extends AppCompatActivity
 
         mClusterManager.clearItems();
 
-        for (CarPark carPark : carParkMap.values()) {
-            mClusterManager.addItem(carPark);
+        for (CarPark carPark : mCarParkList) {
+            mClusterManager.addItem(new CarParkItem(carPark));
         }
     }
 
@@ -416,9 +374,9 @@ public class MainActivity extends AppCompatActivity
         mMap.setOnCameraIdleListener(mClusterManager);
         mMap.setOnMarkerClickListener(mClusterManager);
 
-        mClusterManager.setOnClusterItemClickListener(new ClusterManager.OnClusterItemClickListener<CarPark>() {
+        mClusterManager.setOnClusterItemClickListener(new ClusterManager.OnClusterItemClickListener<CarParkItem>() {
             @Override
-            public boolean onClusterItemClick(CarPark selectedCarPark) {
+            public boolean onClusterItemClick(CarParkItem selectedCarPark) {
 
                 Collection<Marker> markers = mClusterManager.getMarkerCollection().getMarkers();
 
