@@ -23,13 +23,9 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SnapHelper;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
@@ -56,11 +52,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.ui.IconGenerator;
 
@@ -81,7 +72,6 @@ public class MainActivity extends AppCompatActivity
     public final static int REQUEST_CHECK_LOCATION_SETTINGS = 1;
     public final static int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 2;
     public final static int PLACE_AUTOCOMPLETE_REQUEST_CODE = 3;
-    private static final int RC_SIGN_IN = 4;
 
     private GoogleApiClient mGoogleApiClient;
 
@@ -141,6 +131,7 @@ public class MainActivity extends AppCompatActivity
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+
                 super.onScrolled(recyclerView, dx, dy);
 
                 int i = recyclerView.computeVerticalScrollOffset() /
@@ -332,50 +323,50 @@ public class MainActivity extends AppCompatActivity
                 e.printStackTrace();
             }
 
-            DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference("carParks");
-            mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot carParksSnapshot) {
-
-                    for (DataSnapshot carParkSnapshot : carParksSnapshot.getChildren()) {
-
-                        final CarPark carPark = carParkSnapshot.getValue(CarPark.class);
-                        Integer keyOfCarPark = Integer.valueOf(carParkSnapshot.getKey());
-                        carParkMap.put(keyOfCarPark - 1, carPark);
-
-                        DatabaseReference carParkLiveReference = FirebaseDatabase.getInstance().getReference("carParksLive");
-                        carParkLiveReference.child(String.valueOf(keyOfCarPark)).addListenerForSingleValueEvent(new ValueEventListener() {
-
-                            @Override
-                            public void onDataChange(DataSnapshot carParkLiveSnapshot) {
-                                Integer keyOfCarParkLive = Integer.valueOf(carParkLiveSnapshot.getKey());
-                                CarPark carPark = carParkMap.get(keyOfCarParkLive - 1);
-                                carPark.updateLiveData(carParkLiveSnapshot.getValue(CarPark.class));
-
-                                if ("Faulty".equals(carPark.getOccupancyTrend())) {
-                                    mCarParkList.remove(carPark);
-                                } else {
-
-                                    if (mCarParkList.contains(carPark)) {
-                                        mCarParkList.remove(carPark);
-                                    }
-                                    mCarParkList.add(carPark);
-                                    mAdapter.notifyDataSetChanged();
-                                }
-                            }
-
-                            @Override
-                            public void onCancelled(DatabaseError databaseError) {
-                            }
-                        });
-                    }
-
-                }
-
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-                }
-            });
+//            DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference("carParks");
+//            mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
+//                @Override
+//                public void onDataChange(DataSnapshot carParksSnapshot) {
+//
+//                    for (DataSnapshot carParkSnapshot : carParksSnapshot.getChildren()) {
+//
+//                        final CarPark carPark = carParkSnapshot.getValue(CarPark.class);
+//                        Integer keyOfCarPark = Integer.valueOf(carParkSnapshot.getKey());
+//                        carParkMap.put(keyOfCarPark - 1, carPark);
+//
+//                        DatabaseReference carParkLiveReference = FirebaseDatabase.getInstance().getReference("carParksLive");
+//                        carParkLiveReference.child(String.valueOf(keyOfCarPark)).addListenerForSingleValueEvent(new ValueEventListener() {
+//
+//                            @Override
+//                            public void onDataChange(DataSnapshot carParkLiveSnapshot) {
+//                                Integer keyOfCarParkLive = Integer.valueOf(carParkLiveSnapshot.getKey());
+//                                CarPark carPark = carParkMap.get(keyOfCarParkLive - 1);
+//                                carPark.updateLiveData(carParkLiveSnapshot.getValue(CarPark.class));
+//
+//                                if ("Faulty".equals(carPark.getOccupancyTrend())) {
+//                                    mCarParkList.remove(carPark);
+//                                } else {
+//
+//                                    if (mCarParkList.contains(carPark)) {
+//                                        mCarParkList.remove(carPark);
+//                                    }
+//                                    mCarParkList.add(carPark);
+//                                    mAdapter.notifyDataSetChanged();
+//                                }
+//                            }
+//
+//                            @Override
+//                            public void onCancelled(DatabaseError databaseError) {
+//                            }
+//                        });
+//                    }
+//
+//                }
+//
+//                @Override
+//                public void onCancelled(DatabaseError databaseError) {
+//                }
+//            });
 
             addMarkers();
         }
@@ -579,58 +570,6 @@ public class MainActivity extends AppCompatActivity
                     // The user canceled the operation.
                 }
                 break;
-        }
-    }
-
-    class CarParkListAdapter extends RecyclerView.Adapter<CarParkListAdapter.CarParkViewHolder> {
-
-        private List<CarPark> mCarParkList;
-
-        private CarParkListAdapter(List<CarPark> carParkList) {
-            mCarParkList = carParkList;
-        }
-
-        @Override
-        public CarParkViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.car_park, parent, false);
-            return new CarParkViewHolder(view);
-        }
-
-        @Override
-        public void onBindViewHolder(CarParkViewHolder holder, int position) {
-            CarPark carPark = mCarParkList.get(position);
-            holder.mName.setText(carPark.getTitle());
-            holder.mOccupancyTrend.setText(carPark.getOccupancyTrend());
-        }
-
-        @Override
-        public int getItemCount() {
-            return mCarParkList.size();
-        }
-
-        class CarParkViewHolder extends RecyclerView.ViewHolder {
-
-            private TextView mName;
-            private TextView mOccupancyTrend;
-
-            CarParkViewHolder(View itemView) {
-                super(itemView);
-
-                mName = (TextView) itemView.findViewById(R.id.name);
-                mOccupancyTrend = (TextView) itemView.findViewById(R.id.occupancy_trend);
-
-                itemView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-
-                        int position = getAdapterPosition();
-
-                        CarPark carPark = mCarParkList.get(position);
-                        System.out.println(carPark);
-                    }
-                });
-            }
         }
     }
 }
