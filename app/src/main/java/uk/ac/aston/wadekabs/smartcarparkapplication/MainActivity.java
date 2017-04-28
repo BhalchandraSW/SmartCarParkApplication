@@ -317,6 +317,7 @@ public class MainActivity extends AppCompatActivity
 
             try {
 
+                mCarParkList.clear();
                 mCarParkList.addAll(new CarParkEndpointAsyncTask()
                         .execute(mDestination)
                         .get());
@@ -391,7 +392,7 @@ public class MainActivity extends AppCompatActivity
                 }
 
                 // for not showing info window
-                return true;
+                return false;
             }
         });
 

@@ -1,7 +1,6 @@
 package uk.ac.aston.wadekabs.smartcarparkapplication;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
@@ -76,12 +75,12 @@ class CarParkRenderer extends DefaultClusterRenderer<CarParkItem> {
         super.getColor(clusterSize);
 
         if (clusterSize < 423)
-            return Color.RED;
+            return -30720; // orange
 
         if (clusterSize < 846)
-            return Color.BLUE;
+            return -16737844; // blue
 
-        return Color.GREEN;
+        return -10053376; // green
     }
 
     private int getStyle(int free) {
